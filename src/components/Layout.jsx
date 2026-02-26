@@ -7,10 +7,14 @@ import {
     Menu,
     Bell,
     ChevronRight,
-    Target
+    Target,
+    UserCheck,
+    Sun,
+    Moon
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import Notifications from './Notifications';
+import { useTheme } from '../context/ThemeContext';
 
 const SidebarItem = ({ icon: Icon, label, path, active, collapsed }) => (
 
@@ -40,6 +44,7 @@ const SidebarItem = ({ icon: Icon, label, path, active, collapsed }) => (
 
 const Layout = ({ children }) => {
     const { user, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const [collapsed, setCollapsed] = React.useState(false);
     const [showNotifications, setShowNotifications] = React.useState(false);
     const location = useLocation();
@@ -47,6 +52,7 @@ const Layout = ({ children }) => {
     const adminMenu = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
         { icon: Users, label: 'BDA Team', path: '/admin/users' },
+        { icon: UserCheck, label: 'Lead Assignment', path: '/admin/assignment' },
         { icon: Target, label: 'All Leads', path: '/admin/leads' },
     ];
 
@@ -147,6 +153,23 @@ const Layout = ({ children }) => {
                     </button>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <button
+                            className="glass-card"
+                            onClick={toggleTheme}
+                            style={{
+                                width: '42px',
+                                height: '42px',
+                                borderRadius: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'var(--text-muted)'
+                            }}
+                        >
+                            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                        </button>
 
                         <button
                             className="glass-card"

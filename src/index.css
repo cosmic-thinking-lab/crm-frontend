@@ -17,6 +17,16 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+body.light-mode {
+  --bg-dark: #f8fafc;
+  --bg-darker: #f1f5f9;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --glass: rgba(0, 0, 0, 0.02);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-hover: rgba(0, 0, 0, 0.04);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -128,7 +138,7 @@ h4 {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  background: linear-gradient(135deg, var(--text-main) 0%, var(--text-muted) 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

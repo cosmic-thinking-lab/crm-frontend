@@ -40,6 +40,7 @@ import UserManagement from './pages/admin/UserManagement';
 import BDADashboard from './pages/bda/BDADashboard';
 import MyLeads from './pages/bda/MyLeads';
 import BDALeads from './pages/admin/BDALeads';
+import LeadAssignment from './pages/admin/LeadAssignment';
 import LeadDetail from './pages/common/LeadDetail';
 
 function AppContent() {
@@ -90,13 +91,17 @@ function AppContent() {
   );
 }
 
+import { ThemeProvider } from './context/ThemeContext';
+
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -19,6 +19,7 @@ import Modal from '../../components/Modal';
 import LeadForm from '../../components/LeadForm';
 import ImportLeadsModal from '../../components/ImportLeadsModal';
 import AssignLeadModal from '../../components/AssignLeadModal';
+import LeadActionModal from '../../components/LeadActionModal';
 
 const LeadManagement = () => {
     const [leads, setLeads] = useState([]);
@@ -26,6 +27,7 @@ const LeadManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [assigningLead, setAssigningLead] = useState(null);
+    const [updatingLead, setUpdatingLead] = useState(null);
     const [selectedLeads, setSelectedLeads] = useState([]);
     const [isBulkAssignModalOpen, setIsBulkAssignModalOpen] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
@@ -36,6 +38,7 @@ const LeadManagement = () => {
         priority: '',
         source: ''
     });
+
 
     const fetchLeads = async () => {
         setLoading(true);
@@ -163,15 +166,16 @@ const LeadManagement = () => {
             </Modal>
 
             <Modal
-                isOpen={!!assigningLead}
-                onClose={() => setAssigningLead(null)}
-                title="Assign Lead to Team Member"
+                isOpen={!!updatingLead}
+                onClose={() => setUpdatingLead(null)}
+                title="Update Lead Information"
             >
-                {assigningLead && (
-                    <AssignLeadModal
-                        lead={assigningLead}
-                        onClose={() => setAssigningLead(null)}
+                {updatingLead && (
+                    <LeadActionModal
+                        lead={updatingLead}
+                        onClose={() => setUpdatingLead(null)}
                         onComplete={fetchLeads}
+                        isAdmin={true}
                     />
                 )}
             </Modal>
@@ -269,11 +273,11 @@ const LeadManagement = () => {
                         <AnimatePresence>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading leads...</td>
+                                    <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading leads...</td>
                                 </tr>
                             ) : leads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No leads found.</td>
+                                    <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No leads found.</td>
                                 </tr>
                             ) : leads.map((lead) => (
                                 <motion.tr
@@ -352,9 +356,9 @@ const LeadManagement = () => {
                                             <button
                                                 className="btn btn-secondary"
                                                 style={{ padding: '6px 12px', fontSize: '12px' }}
-                                                onClick={() => setAssigningLead(lead)}
+                                                onClick={() => setUpdatingLead(lead)}
                                             >
-                                                Assign
+                                                Update
                                             </button>
                                             <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                                                 <MoreVertical size={18} />

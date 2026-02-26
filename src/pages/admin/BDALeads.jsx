@@ -9,6 +9,8 @@ import {
     Target
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Modal from '../../components/Modal';
+import LeadActionModal from '../../components/LeadActionModal';
 
 const BDALeads = () => {
     const { id } = useParams();
@@ -16,6 +18,7 @@ const BDALeads = () => {
     const [leads, setLeads] = useState([]);
     const [bdaInfo, setBdaInfo] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [updatingLead, setUpdatingLead] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -116,6 +119,7 @@ const BDALeads = () => {
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>STATUS</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>PRIORITY</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>DATE ADDED</th>
+                            <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>ACTIONS</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -173,12 +177,47 @@ const BDALeads = () => {
                                     <td style={{ padding: '16px 24px', color: 'var(--text-muted)', fontSize: '13px' }}>
                                         {new Date(lead.createdAt).toLocaleDateString()}
                                     </td>
+                                    <td style={{ padding: '16px 24px' }}>
+                                        <button
+                                            className="btn btn-secondary"
+                                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                                            onClick={() => setUpdatingLead(lead)}
+                                        >
+                                            Transfer
+                                        </button>
+                                    </td>
                                 </motion.tr>
                             ))}
                         </AnimatePresence>
                     </tbody>
                 </table>
             </div>
+
+            <Modal
+                isOpen={!!updatingLead}
+                onClose={() => setUpdatingLead(null)}
+                title="Transfer Lead"
+            >
+                {updatingLead && (
+                    <LeadActionModal
+                        lead={updatingLead}
+                        onClose={() => setUpdatingLead(null)}
+                        onComplete={() => {
+                            // Refresh data
+                            const fetchData = async () => {
+                                try {
+                                    const { data: leadsData } = await API.get(`/admin/leads?assignedTo=${id}`);
+                                    setLeads(leadsData);
+                                } catch (error) {
+                                    console.error("Failed to refresh leads", error);
+                                }
+                            };
+                            fetchData();
+                        }}
+                        isAdmin={true}
+                    />
+                )}
+            </Modal>
         </div>
     );
 };
