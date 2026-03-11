@@ -6,7 +6,8 @@ const LeadForm = ({ onSubmit, initialData, loading }) => {
         email: '',
         phone: '',
         source: 'Website',
-        priority: 'Medium'
+        priority: 'Medium',
+        lmsType: 'School LMS'
     });
 
     const handleChange = (e) => {
@@ -66,6 +67,21 @@ const LeadForm = ({ onSubmit, initialData, loading }) => {
                         <option value="Direct">Direct</option>
                         <option value="Social Media">Social Media</option>
                         <option value="Referral">Referral</option>
+                    </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Product / LMS Type</label>
+                    <select
+                        name="lmsType"
+                        className="input-field"
+                        value={formData.lmsType}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="School LMS">School LMS</option>
+                        <option value="Institute LMS">Institute LMS</option>
+                        <option value="University LMS">University LMS</option>
+                        <option value="SAAS">SAAS</option>
                     </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

@@ -8,11 +8,11 @@ import {
     Bell,
     ChevronRight,
     Target,
-    UserCheck,
     Sun,
-    Moon
+    Moon,
+    ArrowLeft
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import Notifications from './Notifications';
 import { useTheme } from '../context/ThemeContext';
 
@@ -48,20 +48,48 @@ const Layout = ({ children }) => {
     const [collapsed, setCollapsed] = React.useState(false);
     const [showNotifications, setShowNotifications] = React.useState(false);
     const location = useLocation();
+    const { lmsType: urlLmsType } = useParams();
+
+    // Determine if we are in a product context
+    const searchParams = new URLSearchParams(location.search);
+    const currentLmsType = urlLmsType || searchParams.get('lmsType');
 
     const adminMenu = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
         { icon: Users, label: 'BDA Team', path: '/admin/users' },
-        { icon: UserCheck, label: 'Lead Assignment', path: '/admin/assignment' },
         { icon: Target, label: 'All Leads', path: '/admin/leads' },
     ];
+
+    const productMenu = currentLmsType ? [
+        { 
+            icon: LayoutDashboard, 
+            label: 'Dashboard', 
+            path: `/admin/lms/${encodeURIComponent(currentLmsType)}/dashboard` 
+        },
+        { 
+            icon: Target, 
+            label: 'All Leads', 
+            path: `/admin/leads?lmsType=${encodeURIComponent(currentLmsType)}` 
+        },
+        { 
+            icon: Users, 
+            label: 'BDA Team', 
+            path: `/admin/lms/${encodeURIComponent(currentLmsType)}/bdas` 
+        },
+        { 
+            icon: ArrowLeft, 
+            label: 'Back to Products', 
+            path: '/admin/dashboard',
+            isBack: true
+        }
+    ] : null;
 
     const bdaMenu = [
         { icon: LayoutDashboard, label: 'My Dashboard', path: '/bda/dashboard' },
         { icon: Target, label: 'My Leads', path: '/bda/leads' },
     ];
 
-    const menu = user?.role === 'Admin' ? adminMenu : bdaMenu;
+    const menu = productMenu || (user?.role === 'Admin' ? adminMenu : bdaMenu);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'transparent' }}>
@@ -89,7 +117,23 @@ const Layout = ({ children }) => {
                     }}>
                         <Target size={20} color="white" />
                     </div>
-                    {!collapsed && <span style={{ fontWeight: '800', fontSize: '18px', letterSpacing: '-0.5px' }}>COSMIC CRM</span>}
+                    {!collapsed && (
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: '800', fontSize: '18px', letterSpacing: '-0.5px' }}>COSMIC CRM</span>
+                            {currentLmsType && (
+                                <span style={{ 
+                                    fontSize: '10px', 
+                                    color: 'var(--primary)', 
+                                    fontWeight: '700', 
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    marginTop: '-2px'
+                                }}>
+                                    {currentLmsType}
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <nav style={{ flex: 1, marginTop: '12px' }}>

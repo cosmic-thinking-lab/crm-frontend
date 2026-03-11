@@ -40,8 +40,10 @@ import UserManagement from './pages/admin/UserManagement';
 import BDADashboard from './pages/bda/BDADashboard';
 import MyLeads from './pages/bda/MyLeads';
 import BDALeads from './pages/admin/BDALeads';
-import LeadAssignment from './pages/admin/LeadAssignment';
 import LeadDetail from './pages/common/LeadDetail';
+import LmsDashboard from './pages/admin/LmsDashboard';
+import LmsBdas from './pages/admin/LmsBdas';
+import LmsBdaLeads from './pages/admin/LmsBdaLeads';
 
 function AppContent() {
   const { user } = useAuth();
@@ -58,16 +60,25 @@ function AppContent() {
         </ProtectedRoute>
       } />
 
-      {/* Admin Routes */}
+      {/* Admin Dashboard - standalone page without sidebar */}
+      <Route path="/admin/dashboard" element={
+        <ProtectedRoute role="Admin">
+          <AdminDashboard />
+        </ProtectedRoute>
+      } />
+
+      {/* Admin Routes with sidebar */}
       <Route path="/admin/*" element={
         <ProtectedRoute role="Admin">
           <Layout>
             <Routes>
-              <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="users/:id/leads" element={<BDALeads />} />
               <Route path="leads" element={<LeadManagement />} />
               <Route path="leads/:id" element={<LeadDetail role="Admin" />} />
+              <Route path="lms/:lmsType/dashboard" element={<LmsDashboard />} />
+              <Route path="lms/:lmsType/bdas" element={<LmsBdas />} />
+              <Route path="lms/:lmsType/bda/:bdaId/leads" element={<LmsBdaLeads />} />
             </Routes>
           </Layout>
         </ProtectedRoute>

@@ -11,14 +11,12 @@ import {
     ChevronRight,
     Mail,
     Phone,
-    User as UserIcon,
     BadgeAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../../components/Modal';
 import LeadForm from '../../components/LeadForm';
 import ImportLeadsModal from '../../components/ImportLeadsModal';
-import AssignLeadModal from '../../components/AssignLeadModal';
 import LeadActionModal from '../../components/LeadActionModal';
 
 const LeadManagement = () => {
@@ -26,17 +24,15 @@ const LeadManagement = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-    const [assigningLead, setAssigningLead] = useState(null);
     const [updatingLead, setUpdatingLead] = useState(null);
-    const [selectedLeads, setSelectedLeads] = useState([]);
-    const [isBulkAssignModalOpen, setIsBulkAssignModalOpen] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState({
         status: '',
         priority: '',
-        source: ''
+        source: '',
+        lmsType: new URLSearchParams(window.location.search).get('lmsType') || ''
     });
 
 
@@ -47,6 +43,7 @@ const LeadManagement = () => {
             if (filters.status) query.append('status', filters.status);
             if (filters.priority) query.append('priority', filters.priority);
             if (filters.source) query.append('source', filters.source);
+            if (filters.lmsType) query.append('lmsType', filters.lmsType);
             if (searchTerm) query.append('search', searchTerm);
 
             const { data } = await API.get(`/admin/leads?${query.toString()}`);
@@ -135,27 +132,7 @@ const LeadManagement = () => {
                 </div>
             </div>
 
-            {selectedLeads.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass-card"
-                    style={{
-                        padding: '12px 24px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        background: 'rgba(14, 165, 233, 0.1)',
-                        borderColor: 'var(--primary)'
-                    }}
-                >
-                    <span style={{ fontWeight: '600' }}>{selectedLeads.length} leads selected</span>
-                    <button className="btn btn-primary" onClick={() => setIsBulkAssignModalOpen(true)}>
-                        <UserIcon size={18} />
-                        Bulk Assign
-                    </button>
-                </motion.div>
-            )}
+
 
             <Modal
                 isOpen={isModalOpen}
@@ -191,20 +168,7 @@ const LeadManagement = () => {
                 />
             </Modal>
 
-            <Modal
-                isOpen={isBulkAssignModalOpen}
-                onClose={() => setIsBulkAssignModalOpen(false)}
-                title="Bulk Assign Leads"
-            >
-                <AssignLeadModal
-                    leads={selectedLeads}
-                    onClose={() => setIsBulkAssignModalOpen(false)}
-                    onComplete={() => {
-                        setSelectedLeads([]);
-                        fetchLeads();
-                    }}
-                />
-            </Modal>
+
 
             <div className="glass-card" style={{ padding: '20px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: '300px', position: 'relative' }}>
@@ -251,20 +215,9 @@ const LeadManagement = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
                         <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--glass-border)' }}>
-                            <th style={{ padding: '16px 24px', width: '40px' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={selectedLeads.length === leads.length && leads.length > 0}
-                                    onChange={(e) => {
-                                        if (e.target.checked) setSelectedLeads(leads.map(l => l._id));
-                                        else setSelectedLeads([]);
-                                    }}
-                                />
-                            </th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>LEAD NAME</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>STATUS</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>PRIORITY</th>
-                            <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>ASSIGNED TO</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>DATE ADDED</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>ACTIONS</th>
                         </tr>
@@ -273,11 +226,11 @@ const LeadManagement = () => {
                         <AnimatePresence>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading leads...</td>
+                                    <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading leads...</td>
                                 </tr>
                             ) : leads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No leads found.</td>
+                                    <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No leads found.</td>
                                 </tr>
                             ) : leads.map((lead) => (
                                 <motion.tr
@@ -288,16 +241,6 @@ const LeadManagement = () => {
                                     style={{ borderBottom: '1px solid var(--glass-border)', transition: 'var(--transition)' }}
                                     className="table-row-hover"
                                 >
-                                    <td style={{ padding: '16px 24px' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedLeads.includes(lead._id)}
-                                            onChange={(e) => {
-                                                if (e.target.checked) setSelectedLeads([...selectedLeads, lead._id]);
-                                                else setSelectedLeads(selectedLeads.filter(id => id !== lead._id));
-                                            }}
-                                        />
-                                    </td>
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span style={{ fontWeight: '600', marginBottom: '4px' }}>{lead.name}</span>
@@ -325,28 +268,6 @@ const LeadManagement = () => {
                                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getPriorityColor(lead.priority) }} />
                                             <span style={{ fontSize: '13px' }}>{lead.priority}</span>
                                         </div>
-                                    </td>
-                                    <td style={{ padding: '16px 24px' }}>
-                                        {lead.assignedTo ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{
-                                                    width: '24px',
-                                                    height: '24px',
-                                                    borderRadius: '6px',
-                                                    background: 'var(--secondary)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontSize: '10px',
-                                                    color: 'white'
-                                                }}>
-                                                    {lead.assignedTo.name.charAt(0)}
-                                                </div>
-                                                <span style={{ fontSize: '13px' }}>{lead.assignedTo.name}</span>
-                                            </div>
-                                        ) : (
-                                            <span style={{ fontSize: '12px', color: 'var(--accent)', fontStyle: 'italic' }}>Unassigned</span>
-                                        )}
                                     </td>
                                     <td style={{ padding: '16px 24px', color: 'var(--text-muted)', fontSize: '13px' }}>
                                         {new Date(lead.createdAt).toLocaleDateString()}
