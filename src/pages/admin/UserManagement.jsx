@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import API from '../../api/axios';
 import {
     UserPlus,
@@ -18,16 +18,18 @@ import UserForm from '../../components/UserForm';
 
 const UserManagement = () => {
     const navigate = useNavigate();
+    const { productType } = useParams();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
     const fetchUsers = async (showLoading = true) => {
         if (showLoading) setLoading(true);
         try {
-            const { data } = await API.get(`/admin/users?search=${searchTerm}`);
+            const { data } = await API.get(`/admin/${productType}/users?search=${searchTerm}`);
             setUsers(data);
         } catch (error) {
             console.error("Failed to fetch users", error);
@@ -49,7 +51,7 @@ const UserManagement = () => {
     const handleCreateUser = async (formData) => {
         setFormLoading(true);
         try {
-            await API.post('/admin/users', { ...formData, role: 'BDA' });
+            await API.post('/admin/users', formData);
             setIsModalOpen(false);
             fetchUsers();
         } catch (error) {
@@ -57,6 +59,30 @@ const UserManagement = () => {
         } finally {
             setFormLoading(false);
         }
+    };
+
+    const handleUpdateUser = async (formData) => {
+        setFormLoading(true);
+        try {
+            await API.put(`/admin/users/${selectedUser._id}`, formData);
+            setIsModalOpen(false);
+            setSelectedUser(null);
+            fetchUsers();
+        } catch (error) {
+            console.error("Failed to update BDA account", error);
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const openEditModal = (user) => {
+        setSelectedUser(user);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedUser(null);
     };
 
     const toggleStatus = async (userId, currentStatus) => {
@@ -94,10 +120,14 @@ const UserManagement = () => {
 
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title="Create New BDA Account"
+                onClose={closeModal}
+                title={selectedUser ? "Edit BDA Account" : "Create New BDA Account"}
             >
-                <UserForm onSubmit={handleCreateUser} loading={formLoading} />
+                <UserForm 
+                    onSubmit={selectedUser ? handleUpdateUser : handleCreateUser} 
+                    loading={formLoading} 
+                    initialData={selectedUser} 
+                />
             </Modal>
 
 
@@ -129,7 +159,7 @@ const UserManagement = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         className="glass-card"
                         style={{ padding: '24px', opacity: u.isActive !== false ? 1 : 0.6, cursor: 'pointer' }}
-                        onClick={() => navigate(`/admin/users/${u._id}/leads`)}
+                        onClick={() => navigate(`/admin/${productType}/users/${u._id}/leads`)}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                             <div style={{
@@ -142,9 +172,16 @@ const UserManagement = () => {
                                 justifyContent: 'center',
                                 fontSize: '20px',
                                 fontWeight: '700',
-                                color: 'white'
+                                color: 'white',
+                                overflow: 'hidden'
                             }}>
-                                {u.name.charAt(0)}
+                                {u.profileImage ? (
+                                    <img 
+                                        src={`http://localhost:5000${u.profileImage}`} 
+                                        alt={u.name} 
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                    />
+                                ) : u.name.charAt(0)}
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
@@ -187,7 +224,10 @@ const UserManagement = () => {
                             </div>
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <button
-                                    onClick={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEditModal(u);
+                                    }}
                                     style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer' }}
                                 >
                                     <Edit2 size={16} />

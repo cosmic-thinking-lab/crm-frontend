@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import API from '../../api/axios';
 import {
     Plus,
@@ -20,6 +21,7 @@ import ImportLeadsModal from '../../components/ImportLeadsModal';
 import LeadActionModal from '../../components/LeadActionModal';
 
 const LeadManagement = () => {
+    const { productType } = useParams();
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,8 +33,7 @@ const LeadManagement = () => {
     const [filters, setFilters] = useState({
         status: '',
         priority: '',
-        source: '',
-        lmsType: new URLSearchParams(window.location.search).get('lmsType') || ''
+        source: ''
     });
 
 
@@ -43,10 +44,9 @@ const LeadManagement = () => {
             if (filters.status) query.append('status', filters.status);
             if (filters.priority) query.append('priority', filters.priority);
             if (filters.source) query.append('source', filters.source);
-            if (filters.lmsType) query.append('lmsType', filters.lmsType);
             if (searchTerm) query.append('search', searchTerm);
 
-            const { data } = await API.get(`/admin/leads?${query.toString()}`);
+            const { data } = await API.get(`/admin/${productType}/leads?${query.toString()}`);
             setLeads(data);
         } catch (error) {
             console.error("Failed to fetch leads", error);
@@ -62,7 +62,7 @@ const LeadManagement = () => {
     const handleCreateLead = async (formData) => {
         setFormLoading(true);
         try {
-            await API.post('/admin/leads', formData);
+            await API.post(`/admin/${productType}/leads`, formData);
             setIsModalOpen(false);
             fetchLeads();
         } catch (error) {
@@ -74,13 +74,13 @@ const LeadManagement = () => {
 
     const handleExport = async () => {
         try {
-            const response = await API.get('/admin/leads/export', {
+            const response = await API.get(`/admin/${productType}/leads/export`, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', 'leads_export.xlsx');
+            link.setAttribute('download', `${productType}_leads_export.xlsx`);
             document.body.appendChild(link);
             link.click();
             link.remove();

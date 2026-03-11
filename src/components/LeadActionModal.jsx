@@ -44,25 +44,30 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false }) => {
 
         try {
             const baseUrl = isAdmin ? '/admin' : '/bda';
+            const lmsType = lead.lmsType;
 
-            // 1. Update Status
-            if (status !== lead.status) {
-                await API.patch(`${baseUrl}/leads/${lead._id}/status`, { status });
+            if (!lmsType) {
+                setError('Product type is missing');
+                setSubmitting(false);
+                return;
             }
 
-            // 2. Add Note
-            if (note.trim()) {
-                await API.post(`${baseUrl}/leads/${lead._id}/notes`, { content: note });
-            }
+            // Update lead with all changes at once
+            const updateData = {
+                status,
+                followUpDate,
+                lmsType
+            };
 
-            // 3. Update Follow-up Date
-            if (followUpDate !== (lead.followUpDate ? new Date(lead.followUpDate).toISOString().split('T')[0] : '')) {
-                await API.patch(`${baseUrl}/leads/${lead._id}/followup`, { followUpDate });
-            }
-
-            // 4. Update Assignment (Admin only)
             if (isAdmin && assignedTo !== (lead.assignedTo?._id || lead.assignedTo || '')) {
-                await API.patch(`/admin/leads/${lead._id}/assign`, { assignedTo });
+                updateData.assignedTo = assignedTo;
+            }
+
+            await API.put(`${baseUrl}/leads/${lead._id}`, updateData);
+
+            // Add Note if provided
+            if (note.trim()) {
+                await API.post(`${baseUrl}/leads/${lead._id}/notes?lmsType=${encodeURIComponent(lmsType)}`, { content: note });
             }
 
             setSuccess('Lead updated successfully!');
