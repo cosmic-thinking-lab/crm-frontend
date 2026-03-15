@@ -3,7 +3,7 @@ import { Upload, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import API from '../api/axios';
 
-const ImportLeadsModal = ({ onClose, onComplete }) => {
+const ImportLeadsModal = ({ onClose, onComplete, productType }) => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -29,7 +29,7 @@ const ImportLeadsModal = ({ onClose, onComplete }) => {
         formData.append('file', file);
 
         try {
-            await API.post('/admin/leads/import', formData, {
+            await API.post(`/admin/${encodeURIComponent(productType)}/leads/import`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setSuccess(true);
@@ -46,7 +46,7 @@ const ImportLeadsModal = ({ onClose, onComplete }) => {
 
     const handleDownloadSample = async () => {
         try {
-            const response = await API.get('/admin/leads/export', {
+            const response = await API.get(`/admin/${encodeURIComponent(productType)}/leads/export`, {
                 params: { sample: true },
                 responseType: 'blob'
             });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import API from '../../api/axios';
 import {
     Plus,
@@ -21,7 +21,9 @@ import ImportLeadsModal from '../../components/ImportLeadsModal';
 import LeadActionModal from '../../components/LeadActionModal';
 
 const LeadManagement = () => {
-    const { productType } = useParams();
+    const [searchParams] = useSearchParams();
+    const lmsType = searchParams.get('lmsType') || 'School LMS'; // Default fallback
+    
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,7 +38,6 @@ const LeadManagement = () => {
         source: ''
     });
 
-
     const fetchLeads = async () => {
         setLoading(true);
         try {
@@ -46,7 +47,7 @@ const LeadManagement = () => {
             if (filters.source) query.append('source', filters.source);
             if (searchTerm) query.append('search', searchTerm);
 
-            const { data } = await API.get(`/admin/${productType}/leads?${query.toString()}`);
+            const { data } = await API.get(`/admin/${encodeURIComponent(lmsType)}/leads?${query.toString()}`);
             setLeads(data);
         } catch (error) {
             console.error("Failed to fetch leads", error);
@@ -57,12 +58,12 @@ const LeadManagement = () => {
 
     useEffect(() => {
         fetchLeads();
-    }, [filters, searchTerm]);
+    }, [filters, searchTerm, lmsType]);
 
     const handleCreateLead = async (formData) => {
         setFormLoading(true);
         try {
-            await API.post(`/admin/${productType}/leads`, formData);
+            await API.post(`/admin/${encodeURIComponent(lmsType)}/leads`, formData);
             setIsModalOpen(false);
             fetchLeads();
         } catch (error) {
@@ -74,13 +75,13 @@ const LeadManagement = () => {
 
     const handleExport = async () => {
         try {
-            const response = await API.get(`/admin/${productType}/leads/export`, {
+            const response = await API.get(`/admin/${encodeURIComponent(lmsType)}/leads/export`, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `${productType}_leads_export.xlsx`);
+            link.setAttribute('download', `${lmsType}_leads_export.xlsx`);
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -163,6 +164,7 @@ const LeadManagement = () => {
                 title="Bulk Import Leads"
             >
                 <ImportLeadsModal
+                    productType={lmsType}
                     onClose={() => setIsImportModalOpen(false)}
                     onComplete={fetchLeads}
                 />

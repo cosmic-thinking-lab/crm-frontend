@@ -10,7 +10,8 @@ import {
     ToggleRight,
     Mail,
     ArrowLeft,
-    Users
+    Users,
+    Trash2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Modal from '../../components/Modal';
@@ -51,7 +52,6 @@ const LmsBdas = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (data.generatedPassword) {
-                console.log("Newly Generated BDA Password:", data.generatedPassword);
                 setGeneratedPassword(data.generatedPassword);
             } else {
                 setIsModalOpen(false);
@@ -61,6 +61,31 @@ const LmsBdas = () => {
             console.error("Failed to create user", error);
         } finally {
             setFormLoading(false);
+        }
+    };
+
+    const handleDelete = async (bdaId, e) => {
+        e.stopPropagation();
+        if (!window.confirm("Are you sure you want to delete this BDA? This action cannot be undone.")) return;
+        
+        try {
+            await API.delete(`/admin/${encodeURIComponent(lmsType)}/teams/${bdaId}`);
+            fetchUsers();
+        } catch (error) {
+            console.error("Failed to delete BDA", error);
+            alert("Failed to delete BDA");
+        }
+    };
+
+    const handleToggleActive = async (bdaId, currentStatus, e) => {
+        e.stopPropagation();
+        try {
+            await API.put(`/admin/${encodeURIComponent(lmsType)}/teams/${bdaId}`, {
+                isActive: !currentStatus
+            });
+            fetchUsers();
+        } catch (error) {
+            console.error("Failed to toggle activation", error);
         }
     };
 
@@ -182,12 +207,18 @@ const LmsBdas = () => {
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                    }}
-                                    style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'default' }}
+                                    onClick={(e) => handleToggleActive(u._id, u.isActive !== false, e)}
+                                    title={u.isActive !== false ? "Deactivate Account" : "Activate Account"}
+                                    style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
                                 >
                                     {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                                </button>
+                                <button
+                                    onClick={(e) => handleDelete(u._id, e)}
+                                    title="Delete BDA"
+                                    style={{ background: 'none', border: 'none', color: '#fb7185', cursor: 'pointer', padding: '4px' }}
+                                >
+                                    <Trash2 size={18} />
                                 </button>
                             </div>
                         </div>
