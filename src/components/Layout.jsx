@@ -52,7 +52,9 @@ const Layout = ({ children }) => {
 
     // Determine if we are in a product context
     const searchParams = new URLSearchParams(location.search);
-    const currentLmsType = urlLmsType || searchParams.get('lmsType');
+    const pathMatch = location.pathname.match(/\/admin\/lms\/([^/]+)/);
+    const currentLmsTypeFromPath = pathMatch ? decodeURIComponent(pathMatch[1]) : null;
+    const currentLmsType = urlLmsType || searchParams.get('lmsType') || currentLmsTypeFromPath;
 
     const adminMenu = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },

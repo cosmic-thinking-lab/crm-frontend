@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const LeadForm = ({ onSubmit, initialData, loading }) => {
+const LeadForm = ({ onSubmit, initialData, loading, hideLmsType = false }) => {
     const [formData, setFormData] = useState(initialData || {
         name: '',
         email: '',
@@ -69,21 +69,23 @@ const LeadForm = ({ onSubmit, initialData, loading }) => {
                         <option value="Referral">Referral</option>
                     </select>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Product / LMS Type</label>
-                    <select
-                        name="lmsType"
-                        className="input-field"
-                        value={formData.lmsType}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="School LMS">School LMS</option>
-                        <option value="Institute LMS">Institute LMS</option>
-                        <option value="University LMS">University LMS</option>
-                        <option value="SAAS">SAAS</option>
-                    </select>
-                </div>
+                {!hideLmsType && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Product / LMS Type</label>
+                        <select
+                            name="lmsType"
+                            className="input-field"
+                            value={formData.lmsType}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="School LMS">School LMS</option>
+                            <option value="Institute LMS">Institute LMS</option>
+                            <option value="University LMS">University LMS</option>
+                            <option value="SAAS">SAAS</option>
+                        </select>
+                    </div>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Priority</label>
                     <select

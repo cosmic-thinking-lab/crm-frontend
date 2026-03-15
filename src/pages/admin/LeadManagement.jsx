@@ -139,7 +139,7 @@ const LeadManagement = () => {
                 onClose={() => setIsModalOpen(false)}
                 title="Add New Lead"
             >
-                <LeadForm onSubmit={handleCreateLead} loading={formLoading} />
+                <LeadForm onSubmit={handleCreateLead} loading={formLoading} hideLmsType={true} />
             </Modal>
 
             <Modal

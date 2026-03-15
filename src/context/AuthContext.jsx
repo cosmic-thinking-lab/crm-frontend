@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
             if (token) {
                 try {
                     const { data } = await API.get('/auth/me');
-                    setUser(data);
+                    setUser(data.user); // Fix: set the user object, not the whole response
                 } catch (error) {
                     console.error("Auth initialization failed", error);
                     localStorage.removeItem('token');
@@ -27,8 +27,8 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         const { data } = await API.post('/auth/login', { email, password });
         localStorage.setItem('token', data.token);
-        setUser(data);
-        return data;
+        setUser(data.user); // Fix: set the user object, not the whole response
+        return data.user;
     };
 
     const logout = () => {

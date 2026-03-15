@@ -13,6 +13,8 @@ import {
     Users
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Modal from '../../components/Modal';
+import UserForm from '../../components/UserForm';
 
 const LmsBdas = () => {
     const { lmsType } = useParams();
@@ -20,12 +22,15 @@ const LmsBdas = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
+    const [generatedPassword, setGeneratedPassword] = useState(null);
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            // Fetch all BDAs
-            const { data } = await API.get(`/admin/users?search=${searchTerm}`);
+            // Fetch all BDAs for this LMS
+            const { data } = await API.get(`/admin/${encodeURIComponent(lmsType)}/teams`);
             setUsers(data);
         } catch (error) {
             console.error("Failed to fetch users", error);
@@ -37,6 +42,27 @@ const LmsBdas = () => {
     useEffect(() => {
         fetchUsers();
     }, [searchTerm]);
+
+    const handleCreateUser = async (formData) => {
+        setFormLoading(true);
+        try {
+            // Do not append password, let backend generate it
+            const { data } = await API.post(`/admin/${encodeURIComponent(lmsType)}/teams`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            if (data.generatedPassword) {
+                console.log("Newly Generated BDA Password:", data.generatedPassword);
+                setGeneratedPassword(data.generatedPassword);
+            } else {
+                setIsModalOpen(false);
+            }
+            fetchUsers();
+        } catch (error) {
+            console.error("Failed to create user", error);
+        } finally {
+            setFormLoading(false);
+        }
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -50,9 +76,66 @@ const LmsBdas = () => {
                 </button>
                 <div>
                     <h1 className="text-gradient" style={{ fontSize: '32px', marginBottom: '4px' }}>{lmsType} BDA Team</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Mange and monitor BDAs for {lmsType}</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Manage and monitor BDAs for {lmsType}</p>
                 </div>
             </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-8px' }}>
+                <button 
+                    className="btn btn-primary" 
+                    onClick={() => setIsModalOpen(true)}
+                    style={{ padding: '10px 16px', borderRadius: '12px' }}
+                >
+                    <UserPlus size={18} />
+                    Add BDA
+                </button>
+            </div>
+
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setGeneratedPassword(null);
+                }}
+                title="Add New BDA"
+            >
+                {generatedPassword ? (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                        <div style={{
+                            width: '48px', height: '48px', borderRadius: '50%',
+                            background: 'rgba(16, 185, 129, 0.1)', color: '#10b981',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 16px'
+                        }}>
+                            <Shield size={24} />
+                        </div>
+                        <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>BDA Created Successfully!</h3>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '14px' }}>
+                            Please save this auto-generated password. It will not be shown again.
+                        </p>
+                        <div style={{
+                            padding: '16px', background: 'rgba(255,255,255,0.05)',
+                            borderRadius: '12px', border: '1px solid var(--glass-border)',
+                            fontSize: '24px', fontWeight: 'bold', letterSpacing: '2px',
+                            color: 'var(--primary)', marginBottom: '24px'
+                        }}>
+                            {generatedPassword}
+                        </div>
+                        <button
+                            className="btn btn-primary"
+                            style={{ width: '100%', justifyContent: 'center' }}
+                            onClick={() => {
+                                setIsModalOpen(false);
+                                setGeneratedPassword(null);
+                            }}
+                        >
+                            Done
+                        </button>
+                    </div>
+                ) : (
+                    <UserForm onSubmit={handleCreateUser} loading={formLoading} />
+                )}
+            </Modal>
 
             <div className="glass-card" style={{ padding: '20px', display: 'flex', gap: '16px' }}>
                 <div style={{ flex: 1, position: 'relative' }}>
@@ -71,9 +154,9 @@ const LmsBdas = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
                 {loading ? (
                     <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>Loading team members...</div>
-                ) : users.length === 0 ? (
-                    <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>No BDA accounts found.</div>
-                ) : users.map((u) => (
+                ) : users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 ? (
+                    <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>No BDA accounts found matching your search.</div>
+                ) : users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase())).map((u) => (
                     <motion.div
                         key={u._id}
                         initial={{ opacity: 0, scale: 0.95 }}

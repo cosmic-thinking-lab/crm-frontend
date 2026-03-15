@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 const UserForm = ({ onSubmit, initialData, loading }) => {
     const [formData, setFormData] = useState(initialData || {
         name: '',
-        email: '',
-        password: ''
+        email: ''
     });
     const [imagePreview, setImagePreview] = useState(initialData?.profileImage || null);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -30,7 +29,6 @@ const UserForm = ({ onSubmit, initialData, loading }) => {
         const data = new FormData();
         data.append('name', formData.name);
         data.append('email', formData.email);
-        if (formData.password) data.append('password', formData.password);
         if (selectedFile) data.append('profileImage', selectedFile);
         
         onSubmit(data);
@@ -100,19 +98,7 @@ const UserForm = ({ onSubmit, initialData, loading }) => {
                     required
                 />
             </div>
-            {!initialData && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Password</label>
-                    <input
-                        name="password"
-                        type="password"
-                        className="input-field"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-            )}
+{/* Password generated automatically by backend */}
             <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', marginTop: '12px' }}>
                 {loading ? 'Processing...' : (initialData ? 'Update User' : 'Create BDA')}
             </button>

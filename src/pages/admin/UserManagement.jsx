@@ -29,7 +29,10 @@ const UserManagement = () => {
     const fetchUsers = async (showLoading = true) => {
         if (showLoading) setLoading(true);
         try {
-            const { data } = await API.get(`/admin/${productType}/users?search=${searchTerm}`);
+            const endpoint = productType 
+                ? `/admin/${productType}/users?search=${searchTerm}`
+                : `/admin/users?search=${searchTerm}`;
+            const { data } = await API.get(endpoint);
             setUsers(data);
         } catch (error) {
             console.error("Failed to fetch users", error);
@@ -159,7 +162,12 @@ const UserManagement = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         className="glass-card"
                         style={{ padding: '24px', opacity: u.isActive !== false ? 1 : 0.6, cursor: 'pointer' }}
-                        onClick={() => navigate(`/admin/${productType}/users/${u._id}/leads`)}
+                        onClick={() => {
+                            const path = productType 
+                                ? `/admin/${productType}/users/${u._id}/leads`
+                                : `/admin/users/${u._id}/leads`;
+                            navigate(path);
+                        }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                             <div style={{
