@@ -45,8 +45,8 @@ const BDADashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const { data } = await API.get('/bda/dashboard');
-                setStats(data);
+                const { data } = await API.get('/dashboard/me');
+                setStats(data.data); // Backend returns { success: true, data: { ... } }
             } catch (error) {
                 console.error("Failed to fetch BDA stats", error);
             } finally {
@@ -66,10 +66,10 @@ const BDADashboard = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                <MiniStat title="My Total Leads" value={stats?.totalLeads || 0} icon={Target} color="14, 165, 233" />
-                <MiniStat title="Pending Follow-ups" value={stats?.pendingFollowUps || 0} icon={Calendar} color="244, 63, 94" />
-                <MiniStat title="Target Achieved" value={`${stats?.convertedLeads || 0}/20`} icon={CheckCircle} color="16, 185, 129" />
-                <MiniStat title="Avg. Response" value="1.2h" icon={Clock} color="99, 102, 241" />
+                <MiniStat title="My Total Leads" value={stats?.myLeads || 0} icon={Target} color="14, 165, 233" />
+                <MiniStat title="Today's Follow-ups" value={stats?.todayFollowUpsCount || 0} icon={Calendar} color="244, 63, 94" />
+                <MiniStat title="Conversions" value={stats?.myConversions || 0} icon={CheckCircle} color="16, 185, 129" />
+                <MiniStat title="Conversion Rate" value={stats?.conversionRate || '0%'} icon={TrendingUp} color="99, 102, 241" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
@@ -81,7 +81,7 @@ const BDADashboard = () => {
                 >
                     <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Ready to convert?</h2>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: '1.6' }}>
-                        You have {stats?.pendingFollowUps} leads waiting for a follow-up.
+                        You have {stats?.todayFollowUpsCount} leads scheduled for today.
                         Timed responses increase conversion rates by up to 40%.
                     </p>
                     <button className="btn btn-primary">

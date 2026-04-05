@@ -28,7 +28,9 @@ const ProtectedRoute = ({ children, role }) => {
   }
 
   if (role && user.role !== role) {
-    return <Navigate to={user.role === 'Admin' ? '/admin/dashboard' : '/bda/dashboard'} />;
+    if (user.role === 'Admin') return <Navigate to="/admin/dashboard" />;
+    if (user.role === 'Manager') return <Navigate to="/admin/dashboard" />; // Managers currently share dashboard view
+    return <Navigate to="/bda/dashboard" />;
   }
 
   return children;
@@ -55,7 +57,7 @@ function AppContent() {
       <Route path="/" element={
         <ProtectedRoute>
           <Layout>
-            {user?.role === 'Admin' ? <Navigate to="/admin/dashboard" /> : <Navigate to="/bda/dashboard" />}
+            {user?.role === 'Admin' || user?.role === 'Manager' ? <Navigate to="/admin/dashboard" /> : <Navigate to="/bda/dashboard" />}
           </Layout>
         </ProtectedRoute>
       } />

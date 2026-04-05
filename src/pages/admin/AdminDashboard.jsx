@@ -53,8 +53,8 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const { data } = await API.get('/admin/dashboard');
-                setStats(data);
+                const { data } = await API.get('/dashboard/global');
+                setStats(data.data);
             } catch (error) {
                 console.error("Failed to fetch dashboard stats", error);
             } finally {
@@ -65,14 +65,10 @@ const AdminDashboard = () => {
     }, []);
 
     const getLeadCount = (lmsType) => {
-        if (!stats?.productLeads) return 0;
-        switch (lmsType) {
-            case 'School LMS': return stats.productLeads.schoolLMS || 0;
-            case 'Institute LMS': return stats.productLeads.instituteLMS || 0;
-            case 'University LMS': return stats.productLeads.universityLMS || 0;
-            case 'SAAS': return stats.productLeads.saas || 0;
-            default: return 0;
-        }
+        if (!stats?.projectDistribution) return 0;
+        // Map the product name to the backend project name
+        const project = stats.projectDistribution.find(p => p._id?.name === lmsType);
+        return project ? project.count : 0;
     };
 
     const handleCardClick = (card) => {
