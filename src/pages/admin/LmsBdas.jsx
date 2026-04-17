@@ -11,7 +11,8 @@ import {
     Mail,
     ArrowLeft,
     Users,
-    Trash2
+    Trash2,
+    Edit2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Modal from '../../components/Modal';
@@ -25,18 +26,19 @@ const LmsBdas = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
-    const [generatedPassword, setGeneratedPassword] = useState(null);
+    const [selectedUser, setSelectedUser] = useState(null);
 
-    const fetchUsers = async () => {
-        setLoading(true);
+    const fetchUsers = async (showLoading = true) => {
+        if (showLoading) setLoading(true);
         try {
-            // Fetch all BDAs for this LMS
-            const { data } = await API.get(`/admin/${encodeURIComponent(lmsType)}/teams`);
-            setUsers(data);
+            // Fetch all users using the generic backend API
+            const response = await API.get('/users');
+            // the response from /api/users returns { success, count, data: [...] }
+            setUsers(response.data.data || []);
         } catch (error) {
             console.error("Failed to fetch users", error);
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     };
 
@@ -47,43 +49,51 @@ const LmsBdas = () => {
     const handleCreateUser = async (formData) => {
         setFormLoading(true);
         try {
-            // Do not append password, let backend generate it
-            const { data } = await API.post(`/admin/${encodeURIComponent(lmsType)}/teams`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            if (data.generatedPassword) {
-                setGeneratedPassword(data.generatedPassword);
-            } else {
-                setIsModalOpen(false);
-            }
-            fetchUsers();
+            await API.post('/users', formData);
+            setIsModalOpen(false);
+            fetchUsers(false);
         } catch (error) {
             console.error("Failed to create user", error);
+            alert(error.response?.data?.message || "Failed to create user");
         } finally {
             setFormLoading(false);
         }
     };
 
-    const handleDelete = async (bdaId, e) => {
-        e.stopPropagation();
-        if (!window.confirm("Are you sure you want to delete this BDA? This action cannot be undone.")) return;
-        
+    const handleUpdateUser = async (formData) => {
+        setFormLoading(true);
         try {
-            await API.delete(`/admin/${encodeURIComponent(lmsType)}/teams/${bdaId}`);
-            fetchUsers();
+            await API.patch(`/users/${selectedUser._id}`, formData);
+            setIsModalOpen(false);
+            setSelectedUser(null);
+            fetchUsers(false);
         } catch (error) {
-            console.error("Failed to delete BDA", error);
-            alert("Failed to delete BDA");
+            console.error("Failed to update user", error);
+            alert(error.response?.data?.message || "Failed to update user");
+        } finally {
+            setFormLoading(false);
         }
+    };
+
+    const openEditModal = (user) => {
+        setSelectedUser(user);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedUser(null);
     };
 
     const handleToggleActive = async (bdaId, currentStatus, e) => {
         e.stopPropagation();
         try {
-            await API.put(`/admin/${encodeURIComponent(lmsType)}/teams/${bdaId}`, {
-                isActive: !currentStatus
-            });
-            fetchUsers();
+            if (currentStatus) {
+                await API.delete(`/users/${bdaId}`);
+            } else {
+                await API.patch(`/users/${bdaId}`, { isActive: true });
+            }
+            fetchUsers(false);
         } catch (error) {
             console.error("Failed to toggle activation", error);
         }
@@ -108,58 +118,27 @@ const LmsBdas = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-8px' }}>
                 <button 
                     className="btn btn-primary" 
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => {
+                        setSelectedUser(null);
+                        setIsModalOpen(true);
+                    }}
                     style={{ padding: '10px 16px', borderRadius: '12px' }}
                 >
                     <UserPlus size={18} />
-                    Add BDA
+                    Add User
                 </button>
             </div>
 
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    setGeneratedPassword(null);
-                }}
-                title="Add New BDA"
+                onClose={closeModal}
+                title={selectedUser ? "Edit User" : "Add New User"}
             >
-                {generatedPassword ? (
-                    <div style={{ textAlign: 'center', padding: '20px' }}>
-                        <div style={{
-                            width: '48px', height: '48px', borderRadius: '50%',
-                            background: 'rgba(16, 185, 129, 0.1)', color: '#10b981',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            margin: '0 auto 16px'
-                        }}>
-                            <Shield size={24} />
-                        </div>
-                        <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>BDA Created Successfully!</h3>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '14px' }}>
-                            Please save this auto-generated password. It will not be shown again.
-                        </p>
-                        <div style={{
-                            padding: '16px', background: 'rgba(255,255,255,0.05)',
-                            borderRadius: '12px', border: '1px solid var(--glass-border)',
-                            fontSize: '24px', fontWeight: 'bold', letterSpacing: '2px',
-                            color: 'var(--primary)', marginBottom: '24px'
-                        }}>
-                            {generatedPassword}
-                        </div>
-                        <button
-                            className="btn btn-primary"
-                            style={{ width: '100%', justifyContent: 'center' }}
-                            onClick={() => {
-                                setIsModalOpen(false);
-                                setGeneratedPassword(null);
-                            }}
-                        >
-                            Done
-                        </button>
-                    </div>
-                ) : (
-                    <UserForm onSubmit={handleCreateUser} loading={formLoading} />
-                )}
+                <UserForm 
+                    onSubmit={selectedUser ? handleUpdateUser : handleCreateUser} 
+                    loading={formLoading} 
+                    initialData={selectedUser} 
+                />
             </Modal>
 
             <div className="glass-card" style={{ padding: '20px', display: 'flex', gap: '16px' }}>
@@ -206,20 +185,24 @@ const LmsBdas = () => {
                                 {u.name.charAt(0)}
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                    onClick={(e) => handleToggleActive(u._id, u.isActive !== false, e)}
-                                    title={u.isActive !== false ? "Deactivate Account" : "Activate Account"}
-                                    style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
-                                >
-                                    {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
-                                </button>
-                                <button
-                                    onClick={(e) => handleDelete(u._id, e)}
-                                    title="Delete BDA"
-                                    style={{ background: 'none', border: 'none', color: '#fb7185', cursor: 'pointer', padding: '4px' }}
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+                                {u.globalRole !== 'admin' && (
+                                    <>
+                                        <button
+                                            onClick={(e) => handleToggleActive(u._id, u.isActive !== false, e)}
+                                            title={u.isActive !== false ? "Deactivate Account" : "Activate Account"}
+                                            style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
+                                        >
+                                            {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); openEditModal(u); }}
+                                            title="Edit User"
+                                            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '4px' }}
+                                        >
+                                            <Edit2 size={18} />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
 

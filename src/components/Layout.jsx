@@ -58,7 +58,7 @@ const Layout = ({ children }) => {
 
     const adminMenu = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
-        { icon: Users, label: 'BDA Team', path: '/admin/users' },
+        { icon: Users, label: 'Teams', path: '/admin/users' },
         { icon: Target, label: 'All Leads', path: '/admin/leads' },
     ];
 
@@ -75,7 +75,7 @@ const Layout = ({ children }) => {
         },
         { 
             icon: Users, 
-            label: 'BDA Team', 
+            label: 'Teams', 
             path: `/admin/lms/${encodeURIComponent(currentLmsType)}/bdas` 
         },
         { 

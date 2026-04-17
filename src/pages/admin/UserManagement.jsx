@@ -192,15 +192,17 @@ const UserManagement = () => {
                                 ) : u.name.charAt(0)}
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleStatus(u._id, u.isActive);
-                                    }}
-                                    style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
-                                >
-                                    {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
-                                </button>
+                                {u.globalRole !== 'admin' && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleStatus(u._id, u.isActive);
+                                        }}
+                                        style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
+                                    >
+                                        {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                                    </button>
+                                )}
                                 <button
                                     onClick={(e) => e.stopPropagation()}
                                     style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
@@ -240,15 +242,17 @@ const UserManagement = () => {
                                 >
                                     <Edit2 size={16} />
                                 </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        deleteUser(u._id);
-                                    }}
-                                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}
-                                >
-                                    <Trash2 size={16} />
-                                </button>
+                                {u.globalRole !== 'admin' && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteUser(u._id);
+                                        }}
+                                        style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </motion.div>

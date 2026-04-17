@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 
 const UserForm = ({ onSubmit, initialData, loading }) => {
-    const [formData, setFormData] = useState(initialData || {
-        name: '',
-        email: ''
+    const [formData, setFormData] = useState({
+        name: initialData?.name || '',
+        email: initialData?.email || '',
+        phone: initialData?.phone || '',
+        password: ''
     });
     const [imagePreview, setImagePreview] = useState(initialData?.profileImage || null);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -26,12 +28,15 @@ const UserForm = ({ onSubmit, initialData, loading }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const data = new FormData();
-        data.append('name', formData.name);
-        data.append('email', formData.email);
-        if (selectedFile) data.append('profileImage', selectedFile);
-        
-        onSubmit(data);
+        const payload = {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone
+        };
+        if (formData.password) {
+            payload.password = formData.password;
+        }
+        onSubmit(payload);
     };
 
     return (
@@ -98,9 +103,30 @@ const UserForm = ({ onSubmit, initialData, loading }) => {
                     required
                 />
             </div>
-{/* Password generated automatically by backend */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Phone Number</label>
+                <input
+                    name="phone"
+                    type="tel"
+                    className="input-field"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Password</label>
+                <input
+                    name="password"
+                    type="password"
+                    className="input-field"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required={!initialData}
+                />
+            </div>
             <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', marginTop: '12px' }}>
-                {loading ? 'Processing...' : (initialData ? 'Update User' : 'Create BDA')}
+                {loading ? 'Processing...' : (initialData ? 'Update User' : 'Create User')}
             </button>
         </form>
     );
