@@ -62,18 +62,14 @@ function AppContent() {
         </ProtectedRoute>
       } />
 
-      {/* Admin Dashboard - standalone page without sidebar */}
-      <Route path="/admin/dashboard" element={
-        <ProtectedRoute role="Admin">
-          <AdminDashboard />
-        </ProtectedRoute>
-      } />
+
 
       {/* Admin Routes with sidebar */}
       <Route path="/admin/*" element={
         <ProtectedRoute role="Admin">
           <Layout>
             <Routes>
+              <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="users/:id/leads" element={<BDALeads />} />
               <Route path="leads" element={<LeadManagement />} />

@@ -44,7 +44,6 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                             position: 'relative',
                             zIndex: 1001,
                             padding: '0',
-                            overflow: 'hidden',
                             background: 'var(--bg-dark)'
                         }}
                     >

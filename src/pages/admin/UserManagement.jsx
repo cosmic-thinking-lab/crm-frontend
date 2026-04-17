@@ -10,7 +10,8 @@ import {
     ToggleRight,
     Mail,
     Edit2,
-    Trash2
+    Trash2,
+    Link as LinkIcon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Modal from '../../components/Modal';
@@ -25,15 +26,31 @@ const UserManagement = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [projects, setProjects] = useState([]);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [assignmentData, setAssignmentData] = useState({ projectId: '', role: 'bda' });
+
+    const fetchProjects = async () => {
+        try {
+            const { data } = await API.get('/projects');
+            setProjects(data.data || []);
+        } catch (error) {
+            console.error("Failed to fetch projects", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchProjects();
+    }, []);
 
     const fetchUsers = async (showLoading = true) => {
         if (showLoading) setLoading(true);
         try {
             const endpoint = productType 
-                ? `/admin/${productType}/users?search=${searchTerm}`
-                : `/admin/users?search=${searchTerm}`;
-            const { data } = await API.get(endpoint);
-            setUsers(data);
+                ? `/users?productType=${productType}&search=${searchTerm}`
+                : `/users?search=${searchTerm}`;
+            const response = await API.get(endpoint);
+            setUsers(response.data.data || []);
         } catch (error) {
             console.error("Failed to fetch users", error);
         } finally {
@@ -54,7 +71,7 @@ const UserManagement = () => {
     const handleCreateUser = async (formData) => {
         setFormLoading(true);
         try {
-            await API.post('/admin/users', formData);
+            await API.post('/users', formData);
             setIsModalOpen(false);
             fetchUsers();
         } catch (error) {
@@ -67,7 +84,7 @@ const UserManagement = () => {
     const handleUpdateUser = async (formData) => {
         setFormLoading(true);
         try {
-            await API.put(`/admin/users/${selectedUser._id}`, formData);
+            await API.patch(`/users/${selectedUser._id}`, formData);
             setIsModalOpen(false);
             setSelectedUser(null);
             fetchUsers();
@@ -90,17 +107,46 @@ const UserManagement = () => {
 
     const toggleStatus = async (userId, currentStatus) => {
         try {
-            await API.patch(`/admin/users/${userId}/activate`, { isActive: !currentStatus });
+            if (currentStatus) {
+                await API.delete(`/users/${userId}`);
+            } else {
+                await API.patch(`/users/${userId}`, { isActive: true });
+            }
             fetchUsers(false);
         } catch (error) {
             console.error("Failed to toggle status", error);
         }
     };
 
+    const handleAssignProject = async (e) => {
+        e.preventDefault();
+        setFormLoading(true);
+        try {
+            await API.post(`/projects/${assignmentData.projectId}/members`, {
+                userId: selectedUser._id,
+                role: assignmentData.role
+            });
+            setIsAssignModalOpen(false);
+            setSelectedUser(null);
+            alert("User assigned to project successfully!");
+        } catch (error) {
+            console.error("Failed to assign project", error);
+            alert(error.response?.data?.message || "Failed to assign project");
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const openAssignModal = (e, user) => {
+        e.stopPropagation();
+        setSelectedUser(user);
+        setIsAssignModalOpen(true);
+    };
+
     const deleteUser = async (userId) => {
-        if (window.confirm("Are you sure you want to remove this BDA from the system?")) {
+        if (window.confirm("Are you sure you want to remove this user from the system?")) {
             try {
-                await API.delete(`/admin/users/${userId}`);
+                await API.delete(`/users/${userId}`);
                 fetchUsers(false);
             } catch (error) {
                 console.error("Failed to delete user", error);
@@ -117,7 +163,7 @@ const UserManagement = () => {
                 </div>
                 <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
                     <UserPlus size={18} />
-                    Create BDA Account
+                    Create Team
                 </button>
             </div>
 
@@ -131,6 +177,46 @@ const UserManagement = () => {
                     loading={formLoading} 
                     initialData={selectedUser} 
                 />
+            </Modal>
+
+            <Modal
+                isOpen={isAssignModalOpen}
+                onClose={() => { setIsAssignModalOpen(false); setSelectedUser(null); }}
+                title={`Assign ${selectedUser?.name} to Project`}
+            >
+                <form onSubmit={handleAssignProject} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Select Project</label>
+                        <select 
+                            className="input-field" 
+                            style={{ background: 'var(--bg-dark)' }}
+                            value={assignmentData.projectId}
+                            onChange={(e) => setAssignmentData({ ...assignmentData, projectId: e.target.value })}
+                            required
+                        >
+                            <option value="">Choose a project...</option>
+                            {projects.map(p => (
+                                <option key={p._id} value={p._id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Assign Role</label>
+                        <select 
+                            className="input-field" 
+                            style={{ background: 'var(--bg-dark)' }}
+                            value={assignmentData.role}
+                            onChange={(e) => setAssignmentData({ ...assignmentData, role: e.target.value })}
+                            required
+                        >
+                            <option value="bda">BDA (Team Member)</option>
+                            <option value="manager">Project Manager</option>
+                        </select>
+                    </div>
+                    <button className="btn btn-primary" type="submit" disabled={formLoading} style={{ justifyContent: 'center', marginTop: '12px' }}>
+                        {formLoading ? 'Assigning...' : 'Confirm Assignment'}
+                    </button>
+                </form>
             </Modal>
 
 
@@ -198,16 +284,18 @@ const UserManagement = () => {
                                             e.stopPropagation();
                                             toggleStatus(u._id, u.isActive);
                                         }}
+                                        title={u.isActive !== false ? "Deactivate" : "Activate"}
                                         style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
                                     >
                                         {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
                                     </button>
                                 )}
                                 <button
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                                    onClick={(e) => openAssignModal(e, u)}
+                                    title="Assign to Project"
+                                    style={{ background: 'none', border: 'none', color: 'var(--secondary)', cursor: 'pointer' }}
                                 >
-                                    <MoreVertical size={20} />
+                                    <LinkIcon size={20} />
                                 </button>
                             </div>
                         </div>

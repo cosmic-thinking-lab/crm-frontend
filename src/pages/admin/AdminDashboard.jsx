@@ -1,47 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../api/axios';
-import { GraduationCap, Building2, University, Cloud, X, LayoutDashboard, Target, Users, ChevronRight, LogOut, Sun, Moon, Bell } from 'lucide-react';
+import { GraduationCap, Building2, University, Cloud, X, LayoutDashboard, Target, Users, ChevronRight, LogOut, Sun, Moon, Bell, Plus, Folder } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import Modal from '../../components/Modal';
 
 
 
-const productCards = [
-    {
-        title: 'School LMS',
-        icon: GraduationCap,
-        color: '14, 165, 233',
-        lmsType: 'School LMS',
-        description: 'K-12 Educational platform leads and management',
-        gradient: 'linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(14, 165, 233, 0.03))'
-    },
-    {
-        title: 'Institute LMS',
-        icon: Building2,
-        color: '139, 92, 246',
-        lmsType: 'Institute LMS',
-        description: 'Coaching centers and training institute inquiries',
-        gradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(139, 92, 246, 0.03))'
-    },
-    {
-        title: 'University LMS',
-        icon: University,
-        color: '236, 72, 153',
-        lmsType: 'University LMS',
-        description: 'Higher education and university scale deployments',
-        gradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(236, 72, 153, 0.03))'
-    },
-    {
-        title: 'SAAS Solutions',
-        icon: Cloud,
-        color: '245, 158, 11',
-        lmsType: 'SAAS',
-        description: 'Subscription-based cloud learning management',
-        gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.03))'
-    },
-];
+const productStyles = {
+    'School LMS': { icon: GraduationCap, color: '14, 165, 233' },
+    'Institute LMS': { icon: Building2, color: '139, 92, 246' },
+    'University LMS': { icon: University, color: '236, 72, 153' },
+    'SAAS': { icon: Cloud, color: '245, 158, 11' }
+};
+
+const defaultStyle = { icon: Folder, color: '34, 197, 94' };
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
@@ -50,18 +25,28 @@ const AdminDashboard = () => {
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
+    const [projects, setProjects] = useState([]);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [createLoading, setCreateLoading] = useState(false);
+    const [newProject, setNewProject] = useState({ name: '', description: '' });
+
+    const fetchData = async () => {
+        try {
+            const [statsRes, projectsRes] = await Promise.all([
+                API.get('/dashboard/global'),
+                API.get('/projects')
+            ]);
+            setStats(statsRes.data.data);
+            setProjects(projectsRes.data.data || []);
+        } catch (error) {
+            console.error("Failed to fetch dashboard data", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const { data } = await API.get('/dashboard/global');
-                setStats(data.data);
-            } catch (error) {
-                console.error("Failed to fetch dashboard stats", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchStats();
+        fetchData();
     }, []);
 
     const getLeadCount = (lmsType) => {
@@ -71,8 +56,34 @@ const AdminDashboard = () => {
         return project ? project.count : 0;
     };
 
-    const handleCardClick = (card) => {
-        navigate(`/admin/lms/${encodeURIComponent(card.lmsType)}/dashboard`);
+    const handleCreateProject = async (e) => {
+        e.preventDefault();
+        setCreateLoading(true);
+        try {
+            await API.post('/projects', newProject);
+            setIsCreateModalOpen(false);
+            setNewProject({ name: '', description: '' });
+            fetchData();
+        } catch (error) {
+            console.error("Failed to create project", error);
+            alert(error.response?.data?.message || "Failed to create project");
+        } finally {
+            setCreateLoading(false);
+        }
+    };
+
+    const handleCardClick = (projectName) => {
+        navigate(`/admin/lms/${encodeURIComponent(projectName)}/dashboard`);
+    };
+
+    const getProjectCard = (p) => {
+        const style = productStyles[p.name] || defaultStyle;
+        return {
+            ...p,
+            icon: style.icon,
+            color: style.color,
+            gradient: `linear-gradient(135deg, rgba(${style.color}, 0.12), rgba(${style.color}, 0.03))`
+        };
     };
 
     if (loading) {
@@ -98,96 +109,11 @@ const AdminDashboard = () => {
 
     return (
         <div style={{
-            minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
-            padding: '0 40px'
+            padding: '0 20px'
         }}>
-            {/* Top Bar */}
-            <header style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '20px 0',
-                marginBottom: '20px'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '10px',
-                        background: 'var(--primary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <Target size={20} color="white" />
-                    </div>
-                    <span style={{ fontWeight: '800', fontSize: '20px', letterSpacing: '-0.5px' }}>COSMIC CRM</span>
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <button
-                        className="glass-card"
-                        onClick={toggleTheme}
-                        style={{
-                            width: '42px',
-                            height: '42px',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: 'var(--text-muted)'
-                        }}
-                    >
-                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ textAlign: 'right' }}>
-                            <p style={{ fontSize: '14px', fontWeight: '600' }}>{user?.name}</p>
-                            <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{user?.role}</p>
-                        </div>
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '12px',
-                            background: 'linear-gradient(135deg, var(--secondary), var(--accent))',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: '700',
-                            color: 'white',
-                            fontSize: '14px'
-                        }}>
-                            {user?.name?.charAt(0)}
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={logout}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '10px 16px',
-                            borderRadius: '12px',
-                            color: '#fb7185',
-                            background: 'rgba(251, 113, 133, 0.08)',
-                            border: '1px solid rgba(251, 113, 133, 0.15)',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            transition: 'var(--transition)'
-                        }}
-                    >
-                        <LogOut size={18} />
-                        Sign Out
-                    </button>
-                </div>
-            </header>
 
             {/* Center Content */}
             <div style={{
@@ -202,7 +128,7 @@ const AdminDashboard = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    style={{ textAlign: 'center', marginBottom: '48px' }}
+                    style={{ textAlign: 'center', marginBottom: '40px', position: 'relative', width: '100%' }}
                 >
                     <h1 style={{
                         fontSize: '48px',
@@ -216,10 +142,51 @@ const AdminDashboard = () => {
                     }}>
                         Select a Product
                     </h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '16px', maxWidth: '500px' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '16px', maxWidth: '500px', margin: '0 auto 24px' }}>
                         Choose a product to view its dashboard, manage leads, and track BDA performance
                     </p>
+                    <button 
+                        className="btn btn-primary"
+                        onClick={() => setIsCreateModalOpen(true)}
+                        style={{ padding: '12px 24px', borderRadius: '14px' }}
+                    >
+                        <Plus size={20} />
+                        New Project
+                    </button>
                 </motion.div>
+
+                <Modal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    title="Create New Project"
+                >
+                    <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Project Name</label>
+                            <input 
+                                className="input-field"
+                                value={newProject.name}
+                                onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                                placeholder="e.g. Health LMS"
+                                required
+                            />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Description</label>
+                            <textarea 
+                                className="input-field"
+                                style={{ minHeight: '100px', resize: 'vertical' }}
+                                value={newProject.description}
+                                onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                                placeholder="Describe the purpose of this project..."
+                                required
+                            />
+                        </div>
+                        <button className="btn btn-primary" type="submit" disabled={createLoading} style={{ justifyContent: 'center' }}>
+                            {createLoading ? 'Creating...' : 'Create Project'}
+                        </button>
+                    </form>
+                </Modal>
 
                 <div style={{
                     display: 'grid',
@@ -228,20 +195,21 @@ const AdminDashboard = () => {
                     width: '100%',
                     maxWidth: '1200px'
                 }}>
-                    {productCards.map((card, index) => {
+                    {projects.map((p, index) => {
+                        const card = getProjectCard(p);
                         const Icon = card.icon;
-                        const leadCount = getLeadCount(card.lmsType);
+                        const leadCount = getLeadCount(card.name);
 
                         return (
                             <motion.div
-                                key={card.lmsType}
+                                key={card._id}
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1, duration: 0.4 }}
                                 whileHover={{ y: -10, scale: 1.03 }}
                                 whileTap={{ scale: 0.98 }}
                                 className="glass-card"
-                                onClick={() => handleCardClick(card)}
+                                onClick={() => handleCardClick(card.name)}
                                 style={{
                                     padding: '32px 24px',
                                     cursor: 'pointer',
@@ -301,7 +269,7 @@ const AdminDashboard = () => {
                                         marginBottom: '8px',
                                         letterSpacing: '-0.02em'
                                     }}>
-                                        {card.title}
+                                        {card.name}
                                     </h3>
                                     <p style={{
                                         fontSize: '13px',

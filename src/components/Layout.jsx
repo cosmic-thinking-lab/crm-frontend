@@ -57,9 +57,8 @@ const Layout = ({ children }) => {
     const currentLmsType = urlLmsType || searchParams.get('lmsType') || currentLmsTypeFromPath;
 
     const adminMenu = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
+        { icon: LayoutDashboard, label: 'Projects', path: '/admin/dashboard' },
         { icon: Users, label: 'Teams', path: '/admin/users' },
-        { icon: Target, label: 'All Leads', path: '/admin/leads' },
     ];
 
     const productMenu = currentLmsType ? [

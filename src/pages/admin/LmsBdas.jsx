@@ -61,21 +61,25 @@ const LmsBdas = () => {
     };
 
     const handleUpdateUser = async (formData) => {
+        console.log("Updating user:", selectedUser._id, formData);
         setFormLoading(true);
         try {
             await API.patch(`/users/${selectedUser._id}`, formData);
+            console.log("User updated successfully");
             setIsModalOpen(false);
             setSelectedUser(null);
             fetchUsers(false);
         } catch (error) {
             console.error("Failed to update user", error);
-            alert(error.response?.data?.message || "Failed to update user");
+            alert(error?.response?.data?.message || "Failed to update user");
         } finally {
             setFormLoading(false);
         }
     };
 
-    const openEditModal = (user) => {
+    const openEditModal = (e, user) => {
+        e.preventDefault();
+        e.stopPropagation();
         setSelectedUser(user);
         setIsModalOpen(true);
     };
@@ -86,12 +90,16 @@ const LmsBdas = () => {
     };
 
     const handleToggleActive = async (bdaId, currentStatus, e) => {
+        e.preventDefault();
         e.stopPropagation();
+        console.log("Toggling activation state for:", bdaId, "currentStatus:", currentStatus);
         try {
             if (currentStatus) {
                 await API.delete(`/users/${bdaId}`);
+                console.log("Requested deactivation");
             } else {
                 await API.patch(`/users/${bdaId}`, { isActive: true });
+                console.log("Requested activation");
             }
             fetchUsers(false);
         } catch (error) {
@@ -188,6 +196,7 @@ const LmsBdas = () => {
                                 {u.globalRole !== 'admin' && (
                                     <>
                                         <button
+                                            type="button"
                                             onClick={(e) => handleToggleActive(u._id, u.isActive !== false, e)}
                                             title={u.isActive !== false ? "Deactivate Account" : "Activate Account"}
                                             style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
@@ -195,7 +204,8 @@ const LmsBdas = () => {
                                             {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
                                         </button>
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); openEditModal(u); }}
+                                            type="button"
+                                            onClick={(e) => openEditModal(e, u)}
                                             title="Edit User"
                                             style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '4px' }}
                                         >
