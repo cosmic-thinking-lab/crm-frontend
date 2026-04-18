@@ -236,115 +236,126 @@ const UserManagement = () => {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-                {loading ? (
-                    <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>Loading team members...</div>
-                ) : users.length === 0 ? (
-                    <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>No BDA accounts found.</div>
-                ) : users.map((u) => (
-                    <motion.div
-                        key={u._id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="glass-card"
-                        style={{ padding: '24px', opacity: u.isActive !== false ? 1 : 0.6, cursor: 'pointer' }}
-                        onClick={() => {
-                            const path = productType 
-                                ? `/admin/${productType}/users/${u._id}/leads`
-                                : `/admin/users/${u._id}/leads`;
-                            navigate(path);
-                        }}
-                    >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                            <div style={{
-                                width: '56px',
-                                height: '56px',
-                                borderRadius: '16px',
-                                background: u.isActive !== false ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'var(--glass-border)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '20px',
-                                fontWeight: '700',
-                                color: 'white',
-                                overflow: 'hidden'
-                            }}>
-                                {u.profileImage ? (
-                                    <img 
-                                        src={`http://localhost:5000${u.profileImage}`} 
-                                        alt={u.name} 
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                    />
-                                ) : u.name.charAt(0)}
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                {u.globalRole !== 'admin' && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleStatus(u._id, u.isActive);
-                                        }}
-                                        title={u.isActive !== false ? "Deactivate" : "Activate"}
-                                        style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
-                                    >
-                                        {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
-                                    </button>
-                                )}
-                                <button
-                                    onClick={(e) => openAssignModal(e, u)}
-                                    title="Assign to Project"
-                                    style={{ background: 'none', border: 'none', color: 'var(--secondary)', cursor: 'pointer' }}
-                                >
-                                    <LinkIcon size={20} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>{u.name}</h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                                <Mail size={14} />
-                                {u.email}
-                            </div>
-                        </div>
-
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            paddingTop: '16px',
-                            borderTop: '1px solid var(--glass-border)'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-                                <Shield size={14} color="var(--primary)" />
-                                <span style={{ color: 'var(--text-muted)' }}>Role:</span>
-                                <span style={{ fontWeight: '600' }}>{u.role}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        openEditModal(u);
-                                    }}
-                                    style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer' }}
-                                >
-                                    <Edit2 size={16} />
-                                </button>
-                                {u.globalRole !== 'admin' && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteUser(u._id);
-                                        }}
-                                        style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </motion.div>
-                ))}
+            <div className="glass-table-container">
+                <table className="glass-table">
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Contact</th>
+                            <th>Assignment</th>
+                            <th>Projects & Roles</th>
+                            <th>Account Status</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                    Loading team members...
+                                </td>
+                            </tr>
+                        ) : users.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                    No BDA accounts found.
+                                </td>
+                            </tr>
+                        ) : users.map((u) => (
+                            <motion.tr
+                                key={u._id}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                style={{ opacity: u.isActive !== false ? 1 : 0.6 }}
+                            >
+                                <td>
+                                    <div className="user-cell">
+                                        <div className="user-avatar">
+                                            {u.profileImage ? (
+                                                <img 
+                                                    src={`http://localhost:5000${u.profileImage}`} 
+                                                    alt={u.name} 
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} 
+                                                />
+                                            ) : u.name.charAt(0)}
+                                        </div>
+                                        <div className="user-details">
+                                            <span className="user-name">{u.name}</span>
+                                            <span className="user-email">{u.email}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style={{ color: 'var(--text-main)', fontSize: '13px' }}>{u.phone || 'N/A'}</span>
+                                </td>
+                                <td>
+                                    {u.projectMemberships && u.projectMemberships.length > 0 ? (
+                                        <span className="badge badge-success">Assigned</span>
+                                    ) : (
+                                        <span className="badge badge-muted">Unassigned</span>
+                                    )}
+                                </td>
+                                <td>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {u.projectMemberships && u.projectMemberships.length > 0 ? (
+                                            u.projectMemberships.map((pm, idx) => (
+                                                <span key={idx} className="badge badge-primary">
+                                                    {pm.projectName} <span style={{ opacity: 0.7, marginLeft: '4px', fontSize: '10px' }}>({pm.role})</span>
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Open for projects</span>
+                                        )}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {u.globalRole !== 'admin' ? (
+                                            <button
+                                                onClick={() => toggleStatus(u._id, u.isActive)}
+                                                style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
+                                            >
+                                                {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                                            </button>
+                                        ) : (
+                                            <span className="badge badge-primary" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                                                System Admin
+                                            </span>
+                                        )}
+                                        <span style={{ fontSize: '12px', color: u.isActive !== false ? '#4ade80' : 'var(--text-muted)' }}>
+                                            {u.isActive !== false ? 'Active' : 'Disabled'}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td style={{ textAlign: 'right' }}>
+                                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                        <button
+                                            onClick={(e) => openAssignModal(e, u)}
+                                            title="Assign to Project"
+                                            style={{ background: 'none', border: 'none', color: 'var(--secondary)', cursor: 'pointer' }}
+                                        >
+                                            <LinkIcon size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => openEditModal(u)}
+                                            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer' }}
+                                        >
+                                            <Edit2 size={18} />
+                                        </button>
+                                        {u.globalRole !== 'admin' && (
+                                            <button
+                                                onClick={() => deleteUser(u._id)}
+                                                style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </td>
+                            </motion.tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );

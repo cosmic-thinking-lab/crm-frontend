@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 
-const UserForm = ({ onSubmit, initialData, loading }) => {
+const UserForm = ({ onSubmit, initialData, loading, showRole = false }) => {
     const [formData, setFormData] = useState({
         name: initialData?.name || '',
         email: initialData?.email || '',
         phone: initialData?.phone || '',
+        role: initialData?.role || 'bda',
         password: ''
     });
     const [imagePreview, setImagePreview] = useState(initialData?.profileImage || null);
@@ -33,6 +34,9 @@ const UserForm = ({ onSubmit, initialData, loading }) => {
             email: formData.email,
             phone: formData.phone
         };
+        if (showRole) {
+            payload.role = formData.role;
+        }
         if (formData.password) {
             payload.password = formData.password;
         }
@@ -114,6 +118,22 @@ const UserForm = ({ onSubmit, initialData, loading }) => {
                     required
                 />
             </div>
+            {showRole && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Project Role</label>
+                    <select
+                        name="role"
+                        className="input-field"
+                        style={{ background: 'var(--bg-dark)' }}
+                        value={formData.role}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="bda">BDA (Team Member)</option>
+                        <option value="manager">Project Manager</option>
+                    </select>
+                </div>
+            )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Password</label>
                 <input

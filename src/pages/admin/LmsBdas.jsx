@@ -21,39 +21,60 @@ import UserForm from '../../components/UserForm';
 const LmsBdas = () => {
     const { lmsType } = useParams();
     const navigate = useNavigate();
-    const [users, setUsers] = useState([]);
+    const [members, setMembers] = useState([]);
+    const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedMember, setSelectedMember] = useState(null);
 
-    const fetchUsers = async (showLoading = true) => {
+    const fetchProjectAndMembers = async (showLoading = true) => {
         if (showLoading) setLoading(true);
         try {
-            // Fetch all users using the generic backend API
-            const response = await API.get('/users');
-            // the response from /api/users returns { success, count, data: [...] }
-            setUsers(response.data.data || []);
+            // 1. Fetch current project to get its ID
+            const projectsRes = await API.get('/projects');
+            const foundProject = projectsRes.data.data.find(p => p.name === lmsType || p.slug === lmsType);
+            
+            if (!foundProject) {
+                console.error("Project not found");
+                setLoading(false);
+                return;
+            }
+            setProject(foundProject);
+
+            // 2. Fetch members for this project
+            const membersRes = await API.get(`/projects/${foundProject._id}/members`);
+            setMembers(membersRes.data.data || []);
         } catch (error) {
-            console.error("Failed to fetch users", error);
+            console.error("Failed to fetch project or members", error);
         } finally {
             if (showLoading) setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchUsers();
-    }, [searchTerm]);
+        fetchProjectAndMembers();
+    }, [lmsType]); // Refetch if lmsType changes
 
     const handleCreateUser = async (formData) => {
+        if (!project) return;
         setFormLoading(true);
         try {
-            await API.post('/users', formData);
+            // First create the user
+            const userRes = await API.post('/users', formData);
+            const newUser = userRes.data.data;
+
+            // Then assign them to the current project
+            await API.post(`/projects/${project._id}/members`, {
+                userId: newUser._id,
+                role: formData.role || 'bda'
+            });
+
             setIsModalOpen(false);
-            fetchUsers(false);
+            fetchProjectAndMembers(false);
         } catch (error) {
-            console.error("Failed to create user", error);
+            console.error("Failed to create and assign user", error);
             alert(error.response?.data?.message || "Failed to create user");
         } finally {
             setFormLoading(false);
@@ -61,14 +82,27 @@ const LmsBdas = () => {
     };
 
     const handleUpdateUser = async (formData) => {
-        console.log("Updating user:", selectedUser._id, formData);
+        if (!selectedMember) return;
+        console.log("Updating user:", selectedMember.userId._id, formData);
         setFormLoading(true);
         try {
-            await API.patch(`/users/${selectedUser._id}`, formData);
-            console.log("User updated successfully");
+            // Update user profile
+            const profileUpdate = { ...formData };
+            delete profileUpdate.role; // Don't send role to global user API
+            
+            await API.patch(`/users/${selectedMember.userId._id}`, profileUpdate);
+            
+            // Update project member role if it changed
+            if (formData.role && formData.role !== selectedMember.role) {
+                await API.patch(`/projects/${project._id}/members/${selectedMember._id}`, {
+                    role: formData.role
+                });
+            }
+
+            console.log("User and role updated successfully");
             setIsModalOpen(false);
-            setSelectedUser(null);
-            fetchUsers(false);
+            setSelectedMember(null);
+            fetchProjectAndMembers(false);
         } catch (error) {
             console.error("Failed to update user", error);
             alert(error?.response?.data?.message || "Failed to update user");
@@ -77,33 +111,29 @@ const LmsBdas = () => {
         }
     };
 
-    const openEditModal = (e, user) => {
+    const openEditModal = (e, member) => {
         e.preventDefault();
         e.stopPropagation();
-        setSelectedUser(user);
+        setSelectedMember(member);
         setIsModalOpen(true);
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setSelectedUser(null);
+        setSelectedMember(null);
     };
 
-    const handleToggleActive = async (bdaId, currentStatus, e) => {
+    const handleRemoveMember = async (memberId, e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("Toggling activation state for:", bdaId, "currentStatus:", currentStatus);
+        
+        if (!window.confirm("Remove this user from the project team?")) return;
+
         try {
-            if (currentStatus) {
-                await API.delete(`/users/${bdaId}`);
-                console.log("Requested deactivation");
-            } else {
-                await API.patch(`/users/${bdaId}`, { isActive: true });
-                console.log("Requested activation");
-            }
-            fetchUsers(false);
+            await API.delete(`/projects/${project._id}/members/${memberId}`);
+            fetchProjectAndMembers(false);
         } catch (error) {
-            console.error("Failed to toggle activation", error);
+            console.error("Failed to remove member", error);
         }
     };
 
@@ -127,7 +157,7 @@ const LmsBdas = () => {
                 <button 
                     className="btn btn-primary" 
                     onClick={() => {
-                        setSelectedUser(null);
+                        setSelectedMember(null);
                         setIsModalOpen(true);
                     }}
                     style={{ padding: '10px 16px', borderRadius: '12px' }}
@@ -140,12 +170,13 @@ const LmsBdas = () => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={closeModal}
-                title={selectedUser ? "Edit User" : "Add New User"}
+                title={selectedMember ? "Edit User" : "Add New User"}
             >
                 <UserForm 
-                    onSubmit={selectedUser ? handleUpdateUser : handleCreateUser} 
+                    onSubmit={selectedMember ? handleUpdateUser : handleCreateUser} 
                     loading={formLoading} 
-                    initialData={selectedUser} 
+                    initialData={selectedMember ? { ...selectedMember.userId, role: selectedMember.role } : null}
+                    showRole={true}
                 />
             </Modal>
 
@@ -166,23 +197,25 @@ const LmsBdas = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
                 {loading ? (
                     <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>Loading team members...</div>
-                ) : users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 ? (
-                    <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>No BDA accounts found matching your search.</div>
-                ) : users.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase())).map((u) => (
+                ) : !project ? (
+                    <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>Project not found or loading...</div>
+                ) : members.filter(m => m.userId.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.userId.email.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 ? (
+                    <div style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', padding: '40px' }}>No assigned members found matching your search.</div>
+                ) : members.filter(m => m.userId.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.userId.email.toLowerCase().includes(searchTerm.toLowerCase())).map((m) => (
                     <motion.div
-                        key={u._id}
+                        key={m._id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="glass-card"
-                        style={{ padding: '24px', opacity: u.isActive !== false ? 1 : 0.6, cursor: 'pointer' }}
-                        onClick={() => navigate(`/admin/lms/${encodeURIComponent(lmsType)}/bda/${u._id}/leads`)}
+                        style={{ padding: '24px', opacity: m.userId.isActive !== false ? 1 : 0.6, cursor: 'pointer' }}
+                        onClick={() => navigate(`/admin/lms/${encodeURIComponent(lmsType)}/bda/${m.userId._id}/leads`)}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                             <div style={{
                                 width: '56px',
                                 height: '56px',
                                 borderRadius: '16px',
-                                background: u.isActive !== false ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'var(--glass-border)',
+                                background: m.userId.isActive !== false ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'var(--glass-border)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -190,37 +223,38 @@ const LmsBdas = () => {
                                 fontWeight: '700',
                                 color: 'white'
                             }}>
-                                {u.name.charAt(0)}
+                                {m.userId.name.charAt(0)}
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                {u.globalRole !== 'admin' && (
-                                    <>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => handleToggleActive(u._id, u.isActive !== false, e)}
-                                            title={u.isActive !== false ? "Deactivate Account" : "Activate Account"}
-                                            style={{ background: 'none', border: 'none', color: u.isActive !== false ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer' }}
-                                        >
-                                            {u.isActive !== false ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => openEditModal(e, u)}
-                                            title="Edit User"
-                                            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '4px' }}
-                                        >
-                                            <Edit2 size={18} />
-                                        </button>
-                                    </>
-                                )}
+                                <button
+                                    type="button"
+                                    onClick={(e) => handleRemoveMember(m._id, e)}
+                                    title="Remove from Project"
+                                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setSelectedMember(m);
+                                        setIsModalOpen(true);
+                                    }}
+                                    title="Edit User"
+                                    style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '4px' }}
+                                >
+                                    <Edit2 size={18} />
+                                </button>
                             </div>
                         </div>
 
                         <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>{u.name}</h3>
+                            <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>{m.userId.name}</h3>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
                                 <Mail size={14} />
-                                {u.email}
+                                {m.userId.email}
                             </div>
                         </div>
 
@@ -234,7 +268,7 @@ const LmsBdas = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
                                 <Shield size={14} color="var(--primary)" />
                                 <span style={{ color: 'var(--text-muted)' }}>Role:</span>
-                                <span style={{ fontWeight: '600' }}>{u.role}</span>
+                                <span style={{ fontWeight: '600' }}>{m.role}</span>
                             </div>
                             <div style={{ display: 'flex', gap: '4px', alignItems: 'center', color: 'var(--primary)', fontWeight: '600', fontSize: '13px' }}>
                                 View Leads
