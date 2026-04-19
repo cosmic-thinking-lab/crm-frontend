@@ -11,8 +11,9 @@ import {
 import API from '../api/axios';
 import { motion } from 'framer-motion';
 
-const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false }) => {
-    const [status, setStatus] = useState(lead.status || 'New');
+const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId }) => {
+    const [status, setStatus] = useState(lead.status?.toLowerCase() || 'new');
+    const [priority, setPriority] = useState(lead.priority?.toLowerCase() || 'medium');
     const [note, setNote] = useState('');
     const [followUpDate, setFollowUpDate] = useState(lead.followUpDate ? new Date(lead.followUpDate).toISOString().split('T')[0] : '');
     const [assignedTo, setAssignedTo] = useState(lead.assignedTo?._id || lead.assignedTo || '');
@@ -26,8 +27,8 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false }) => {
         if (isAdmin) {
             const fetchUsers = async () => {
                 try {
-                    const { data } = await API.get('/admin/users');
-                    setUsers((data || []).filter(u => u.isActive !== false));
+                    const { data } = await API.get('/users');
+                    setUsers((data.data || data || []).filter(u => u.isActive !== false));
                 } catch (err) {
                     console.error('Failed to load team members');
                 }
@@ -43,31 +44,30 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false }) => {
         setSuccess('');
 
         try {
-            const baseUrl = isAdmin ? '/admin' : '/bda';
-            const lmsType = lead.lmsType;
+            const resolvedProjectId = projectId || lead.projectId || lead.project?._id;
 
-            if (!lmsType) {
-                setError('Product type is missing');
+            if (!resolvedProjectId) {
+                setError('Project ID is missing for this lead');
                 setSubmitting(false);
                 return;
             }
 
-            // Update lead with all changes at once
+            // Update lead with all changes at once - following Postman request format
             const updateData = {
                 status,
-                followUpDate,
-                lmsType
+                priority,
+                followUpDate
             };
 
-            if (isAdmin && assignedTo !== (lead.assignedTo?._id || lead.assignedTo || '')) {
-                updateData.assignedTo = assignedTo;
+            if (isAdmin) {
+                updateData.assignedTo = assignedTo || null;
             }
 
-            await API.put(`${baseUrl}/leads/${lead._id}`, updateData);
+            await API.patch(`/projects/${resolvedProjectId}/leads/${lead._id}`, updateData);
 
             // Add Note if provided
             if (note.trim()) {
-                await API.post(`${baseUrl}/leads/${lead._id}/notes?lmsType=${encodeURIComponent(lmsType)}`, { content: note });
+                await API.post(`/projects/${resolvedProjectId}/leads/${lead._id}/notes`, { content: note });
             }
 
             setSuccess('Lead updated successfully!');
@@ -88,7 +88,7 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false }) => {
                 <p style={{ fontWeight: '600', fontSize: '16px' }}>{lead.name}</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1fr 1fr' : '1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '14px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <TrendingUp size={14} /> Lead Status
@@ -98,14 +98,30 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false }) => {
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
                     >
-                        <option value="New">New</option>
-                        <option value="Contacted">Contacted</option>
-                        <option value="Qualified">Qualified</option>
-                        <option value="Proposal Sent">Proposal Sent</option>
-                        <option value="Negotiation">Negotiation</option>
-                        <option value="Converted">Converted</option>
-                        <option value="Not Interested">Not Interested</option>
-                        <option value="Junk">Junk</option>
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="proposal_sent">Proposal Sent</option>
+                        <option value="negotiation">Negotiation</option>
+                        <option value="converted">Converted</option>
+                        <option value="lost">Lost</option>
+                        <option value="junk">Junk</option>
+                    </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '14px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <TrendingUp size={14} /> Priority
+                    </label>
+                    <select
+                        className="input-field"
+                        value={priority}
+                        onChange={(e) => setPriority(e.target.value)}
+                    >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
                     </select>
                 </div>
 
@@ -127,7 +143,7 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false }) => {
                     </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: isAdmin ? 'unset' : 'span 2' }}>
                     <label style={{ fontSize: '14px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <CalendarIcon size={14} /> Next Follow-up
                     </label>
@@ -188,5 +204,6 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false }) => {
         </form>
     );
 };
+
 
 export default LeadActionModal;

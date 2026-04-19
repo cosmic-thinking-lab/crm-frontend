@@ -12,27 +12,50 @@ import {
     Edit2,
     Trash2,
     History,
-    Send
+    Send,
+    Check,
+    X
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const LeadDetail = ({ role }) => {
-    const { id } = useParams();
+    const { id, projectId } = useParams();
     const navigate = useNavigate();
     const [lead, setLead] = useState(null);
+    const [notes, setNotes] = useState([]);
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [notesLoading, setNotesLoading] = useState(false);
     const [newNote, setNewNote] = useState('');
+    const [editingNoteId, setEditingNoteId] = useState(null);
+    const [editingContent, setEditingContent] = useState('');
+
+    const fetchNotes = async () => {
+        if (!id || !projectId) return;
+        setNotesLoading(true);
+        try {
+            const { data } = await API.get(`/projects/${projectId}/leads/${id}/notes`);
+            setNotes(data.data || data);
+        } catch (error) {
+            console.error("Failed to fetch notes", error);
+        } finally {
+            setNotesLoading(false);
+        }
+    };
 
     const fetchLeadData = async () => {
         setLoading(true);
         try {
-            const endpoint = role === 'Admin' ? `/admin/leads/${id}` : `/bda/leads/${id}`;
-            const { data: leadData } = await API.get(endpoint);
-            setLead(leadData);
+            // Use project-scoped endpoint for lead details
+            const { data: leadData } = await API.get(`/projects/${projectId}/leads/${id}`);
+            setLead(leadData.data || leadData);
 
-            const { data: historyData } = await API.get(`/leads/${id}/history`);
-            setHistory(historyData);
+            // Use project-scoped endpoint for history
+            const { data: historyData } = await API.get(`/projects/${projectId}/leads/${id}/history`);
+            setHistory(historyData.data || historyData);
+            
+            // Also fetch notes using dedicated endpoint
+            fetchNotes();
         } catch (error) {
             console.error("Failed to fetch lead details", error);
         } finally {
@@ -41,23 +64,52 @@ const LeadDetail = ({ role }) => {
     };
 
     useEffect(() => {
-        fetchLeadData();
-    }, [id, role]);
+        if (id && projectId) {
+            fetchLeadData();
+        }
+    }, [id, projectId]);
 
     const addNote = async (e) => {
         e.preventDefault();
         if (!newNote.trim()) return;
         try {
-            await API.post(`/bda/leads/${id}/notes`, { content: newNote });
+            // Use project-scoped endpoint for notes
+            await API.post(`/projects/${projectId}/leads/${id}/notes`, { content: newNote });
             setNewNote('');
-            fetchLeadData(); // Refresh to show new note and history
+            fetchNotes(); // Refresh only notes list for better UX
+            fetchLeadData(); // Also refresh lead to get updated noteCount if displayed
         } catch (error) {
             console.error("Failed to add note", error);
+            alert(error.response?.data?.message || "Failed to add note");
         }
     };
 
-    if (loading) return <div style={{ color: 'white' }}>Loading lead details...</div>;
-    if (!lead) return <div style={{ color: 'white' }}>Lead not found.</div>;
+    const handleUpdateNote = async (noteId) => {
+        if (!editingContent.trim()) return;
+        try {
+            await API.patch(`/projects/${projectId}/leads/${id}/notes/${noteId}`, { content: editingContent });
+            setEditingNoteId(null);
+            fetchNotes();
+        } catch (error) {
+            console.error("Failed to update note", error);
+            alert(error.response?.data?.message || "Failed to update note");
+        }
+    };
+
+    const handleDeleteNote = async (noteId) => {
+        if (!window.confirm("Are you sure you want to delete this note? This action cannot be undone.")) return;
+        try {
+            await API.delete(`/projects/${projectId}/leads/${id}/notes/${noteId}`);
+            fetchNotes(); // Refresh list
+            fetchLeadData(); // Also refresh lead to update noteCount
+        } catch (error) {
+            console.error("Failed to delete note", error);
+            alert(error.response?.data?.message || "Failed to delete note");
+        }
+    };
+
+    if (loading) return <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>Loading lead details...</div>;
+    if (!lead) return <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>Lead not found.</div>;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -105,15 +157,6 @@ const LeadDetail = ({ role }) => {
                                 <div>
                                     <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Email Address</p>
                                     <p style={{ fontSize: '15px' }}>{lead.email}</p>
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: '#10b981' }}>
-                                    <div style={{ margin: 'auto' }}><Clock size={18} /></div>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Source</p>
-                                    <p style={{ fontSize: '15px' }}>{lead.source}</p>
                                 </div>
                             </div>
                         </div>
@@ -175,11 +218,19 @@ const LeadDetail = ({ role }) => {
                                     }} />
                                     <div style={{ flex: 1 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                            <span style={{ fontWeight: '600', fontSize: '14px' }}>{item.actionType.replace('_', ' ')}</span>
-                                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{new Date(item.createdAt).toLocaleString()}</span>
+                                            <span style={{ fontWeight: '600', fontSize: '14px' }}>
+                                                {(item.actionType || 'Lead Assignment').replace('_', ' ')}
+                                            </span>
+                                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                                {new Date(item.createdAt || item.assignedAt).toLocaleString()}
+                                            </span>
                                         </div>
-                                        <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{item.details}</p>
-                                        <p style={{ fontSize: '12px', color: 'var(--primary)', marginTop: '4px' }}>by {item.userId?.name}</p>
+                                        <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                            {item.details || (item.assignedTo ? `Lead assigned to ${item.assignedTo.name}` : 'A lead action was performed')}
+                                        </p>
+                                        <p style={{ fontSize: '12px', color: 'var(--primary)', marginTop: '4px' }}>
+                                            by {item.userId?.name || item.assignedBy?.name || 'System'}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -188,16 +239,79 @@ const LeadDetail = ({ role }) => {
 
                     <div className="glass-card" style={{ padding: '24px' }}>
                         <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600' }}>Interaction Notes</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px', maxHeight: '200px', overflowY: 'auto' }}>
-                            {lead.notes?.map((note, idx) => (
-                                <div key={idx} style={{ padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)' }}>
-                                    <p style={{ fontSize: '13px', marginBottom: '6px' }}>{note.content}</p>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
-                                        <span>{new Date(note.createdAt).toLocaleDateString()}</span>
-                                    </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px', maxHeight: '300px', overflowY: 'auto' }}>
+                            {notesLoading && notes.length === 0 ? (
+                                <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Loading notes...</p>
+                            ) : notes.map((note, idx) => (
+                                <div key={note._id || idx} style={{ padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                                    {editingNoteId === note._id ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <textarea
+                                                className="input-field"
+                                                style={{ minHeight: '60px', fontSize: '14px', resize: 'none' }}
+                                                value={editingContent}
+                                                onChange={(e) => setEditingContent(e.target.value)}
+                                                autoFocus
+                                            />
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <button 
+                                                    className="btn btn-secondary" 
+                                                    style={{ padding: '4px 8px', fontSize: '11px' }}
+                                                    onClick={() => setEditingNoteId(null)}
+                                                >
+                                                    <X size={14} /> Cancel
+                                                </button>
+                                                <button 
+                                                    className="btn btn-primary" 
+                                                    style={{ padding: '4px 8px', fontSize: '11px' }}
+                                                    onClick={() => handleUpdateNote(note._id)}
+                                                >
+                                                    <Check size={14} /> Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <p style={{ fontSize: '14px', marginBottom: '8px', lineHeight: '1.5', flex: 1 }}>{note.content}</p>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button 
+                                                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.6 }}
+                                                        onClick={() => {
+                                                            setEditingNoteId(note._id);
+                                                            setEditingContent(note.content);
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}
+                                                        title="Edit Note"
+                                                    >
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                    <button 
+                                                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', opacity: 0.6 }}
+                                                        onClick={() => handleDeleteNote(note._id)}
+                                                        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}
+                                                        title="Delete Note"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: 'white' }}>
+                                                        {note.addedBy?.name?.charAt(0) || 'U'}
+                                                    </div>
+                                                    <span>{note.addedBy?.name || 'User'}</span>
+                                                </div>
+                                                <span>{new Date(note.addedAt || note.createdAt).toLocaleString()}</span>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             ))}
-                            {(!lead.notes || lead.notes.length === 0) && <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No notes yet.</p>}
+                            {(!notesLoading && notes.length === 0) && <p style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '20px' }}>No notes recorded for this lead yet.</p>}
                         </div>
 
                         <form onSubmit={addNote} style={{ position: 'relative' }}>

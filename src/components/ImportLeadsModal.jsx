@@ -3,7 +3,7 @@ import { Upload, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import API from '../api/axios';
 
-const ImportLeadsModal = ({ onClose, onComplete, productType }) => {
+const ImportLeadsModal = ({ onClose, onComplete, projectId }) => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -21,7 +21,7 @@ const ImportLeadsModal = ({ onClose, onComplete, productType }) => {
     };
 
     const handleUpload = async () => {
-        if (!file) return;
+        if (!file || !projectId) return;
         setLoading(true);
         setError('');
 
@@ -29,7 +29,7 @@ const ImportLeadsModal = ({ onClose, onComplete, productType }) => {
         formData.append('file', file);
 
         try {
-            await API.post(`/admin/${encodeURIComponent(productType)}/leads/import`, formData, {
+            await API.post(`/projects/${projectId}/leads/import`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setSuccess(true);
@@ -45,8 +45,9 @@ const ImportLeadsModal = ({ onClose, onComplete, productType }) => {
     };
 
     const handleDownloadSample = async () => {
+        if (!projectId) return;
         try {
-            const response = await API.get(`/admin/${encodeURIComponent(productType)}/leads/export`, {
+            const response = await API.get(`/projects/${projectId}/leads/export`, {
                 params: { sample: true },
                 responseType: 'blob'
             });

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Modal from '../../components/Modal';
+import LeadForm from '../../components/LeadForm';
 
 
 
@@ -29,6 +30,8 @@ const AdminDashboard = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [createLoading, setCreateLoading] = useState(false);
     const [newProject, setNewProject] = useState({ name: '', description: '' });
+    const [addingLeadToProject, setAddingLeadToProject] = useState(null);
+    const [leadCreateLoading, setLeadCreateLoading] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -69,6 +72,20 @@ const AdminDashboard = () => {
             alert(error.response?.data?.message || "Failed to create project");
         } finally {
             setCreateLoading(false);
+        }
+    };
+
+    const handleCreateLeadForProject = async (formData) => {
+        setLeadCreateLoading(true);
+        try {
+            await API.post(`/projects/${addingLeadToProject._id}/leads`, formData);
+            setAddingLeadToProject(null);
+            fetchData(); // Refresh to see updated count
+        } catch (error) {
+            console.error("Failed to create lead", error);
+            alert(error.response?.data?.message || "Failed to create lead");
+        } finally {
+            setLeadCreateLoading(false);
         }
     };
 
@@ -188,6 +205,18 @@ const AdminDashboard = () => {
                     </form>
                 </Modal>
 
+                <Modal
+                    isOpen={!!addingLeadToProject}
+                    onClose={() => setAddingLeadToProject(null)}
+                    title={`Add New Lead to ${addingLeadToProject?.name}`}
+                >
+                    <LeadForm 
+                        onSubmit={handleCreateLeadForProject} 
+                        loading={leadCreateLoading} 
+                        hideLmsType={true} 
+                    />
+                </Modal>
+
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(4, 1fr)',
@@ -280,19 +309,44 @@ const AdminDashboard = () => {
                                     </p>
                                 </div>
 
-                                {/* Lead count */}
+                                {/* Lead count and add button */}
                                 <div style={{
                                     marginTop: 'auto',
-                                    padding: '8px 16px',
-                                    borderRadius: '20px',
-                                    background: `rgba(${card.color}, 0.08)`,
-                                    border: `1px solid rgba(${card.color}, 0.15)`,
-                                    fontSize: '13px',
-                                    fontWeight: '600',
-                                    color: `rgb(${card.color})`,
+                                    display: 'flex',
+                                    gap: '8px',
+                                    width: '100%',
                                     zIndex: 1
                                 }}>
-                                    {leadCount} Leads
+                                    <div style={{
+                                        flex: 1,
+                                        padding: '8px 16px',
+                                        borderRadius: '12px',
+                                        background: `rgba(${card.color}, 0.08)`,
+                                        border: `1px solid rgba(${card.color}, 0.15)`,
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        color: `rgb(${card.color})`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        {leadCount} Leads
+                                    </div>
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setAddingLeadToProject(p);
+                                        }}
+                                        style={{
+                                            padding: '8px',
+                                            borderRadius: '12px',
+                                            boxShadow: `0 4px 12px rgba(${card.color}, 0.2)`
+                                        }}
+                                        title="Add Lead"
+                                    >
+                                        <Plus size={18} />
+                                    </button>
                                 </div>
                             </motion.div>
                         );

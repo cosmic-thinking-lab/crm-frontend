@@ -5,8 +5,9 @@ const LeadForm = ({ onSubmit, initialData, loading, hideLmsType = false }) => {
         name: '',
         email: '',
         phone: '',
-        source: 'Website',
-        priority: 'Medium',
+        organization: '',
+        status: 'new',
+        priority: 'medium',
         lmsType: 'School LMS'
     });
 
@@ -28,9 +29,11 @@ const LeadForm = ({ onSubmit, initialData, loading, hideLmsType = false }) => {
                     className="input-field"
                     value={formData.name}
                     onChange={handleChange}
+                    placeholder="Enter full name"
                     required
                 />
             </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Email Address</label>
@@ -40,6 +43,7 @@ const LeadForm = ({ onSubmit, initialData, loading, hideLmsType = false }) => {
                         className="input-field"
                         value={formData.email}
                         onChange={handleChange}
+                        placeholder="email@example.com"
                         required
                     />
                 </div>
@@ -50,42 +54,41 @@ const LeadForm = ({ onSubmit, initialData, loading, hideLmsType = false }) => {
                         className="input-field"
                         value={formData.phone}
                         onChange={handleChange}
+                        placeholder="e.g. 9876543210"
                         required
                     />
                 </div>
             </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Organization / School</label>
+                <input
+                    name="organization"
+                    className="input-field"
+                    value={formData.organization}
+                    onChange={handleChange}
+                    placeholder="Enter organization name"
+                />
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Source</label>
+                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Status</label>
                     <select
-                        name="source"
+                        name="status"
                         className="input-field"
-                        value={formData.source}
+                        value={formData.status}
                         onChange={handleChange}
                     >
-                        <option value="Website">Website</option>
-                        <option value="Direct">Direct</option>
-                        <option value="Social Media">Social Media</option>
-                        <option value="Referral">Referral</option>
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="proposal_sent">Proposal Sent</option>
+                        <option value="negotiation">Negotiation</option>
+                        <option value="converted">Converted</option>
+                        <option value="lost">Lost</option>
                     </select>
                 </div>
-                {!hideLmsType && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Product / LMS Type</label>
-                        <select
-                            name="lmsType"
-                            className="input-field"
-                            value={formData.lmsType}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="School LMS">School LMS</option>
-                            <option value="Institute LMS">Institute LMS</option>
-                            <option value="University LMS">University LMS</option>
-                            <option value="SAAS">SAAS</option>
-                        </select>
-                    </div>
-                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Priority</label>
                     <select
@@ -94,17 +97,39 @@ const LeadForm = ({ onSubmit, initialData, loading, hideLmsType = false }) => {
                         value={formData.priority}
                         onChange={handleChange}
                     >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
                     </select>
                 </div>
             </div>
+
+            {!hideLmsType && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Product / LMS Type</label>
+                    <select
+                        name="lmsType"
+                        className="input-field"
+                        value={formData.lmsType}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="School LMS">School LMS</option>
+                        <option value="Institute LMS">Institute LMS</option>
+                        <option value="University LMS">University LMS</option>
+                        <option value="SAAS">SAAS</option>
+                    </select>
+                </div>
+            )}
+
             <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', marginTop: '12px' }}>
                 {loading ? 'Processing...' : (initialData ? 'Update Lead' : 'Create Lead')}
             </button>
         </form>
     );
 };
+
+
 
 export default LeadForm;

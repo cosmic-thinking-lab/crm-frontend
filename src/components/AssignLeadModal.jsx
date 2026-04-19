@@ -3,7 +3,7 @@ import { User, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import API from '../api/axios';
 import { motion } from 'framer-motion';
 
-const AssignLeadModal = ({ lead, leads, onClose, onComplete }) => {
+const AssignLeadModal = ({ lead, leads, onClose, onComplete, projectId }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -16,9 +16,9 @@ const AssignLeadModal = ({ lead, leads, onClose, onComplete }) => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const { data } = await API.get('/admin/users');
-                // Only show active team members in assignment options (treat undefined as active)
-                const activeUsers = (data || []).filter(u => u.isActive !== false);
+                const { data } = await API.get('/users');
+                // Only show active team members (v2.0 uses data.data)
+                const activeUsers = (data.data || data || []).filter(u => u.isActive !== false);
                 setUsers(activeUsers);
             } catch (err) {
                 setError('Failed to load team members');
@@ -30,17 +30,19 @@ const AssignLeadModal = ({ lead, leads, onClose, onComplete }) => {
     }, []);
 
     const handleAssign = async () => {
-        if (!selectedUser || leadIds.length === 0) return;
+        if (!selectedUser || leadIds.length === 0 || !projectId) {
+            if (!projectId) setError('Project ID is required for assignment');
+            return;
+        }
         setSubmitting(true);
         setError('');
         try {
-            if (leadIds.length === 1 && lead) {
-                // Single assignment
-                await API.patch(`/admin/leads/${leadIds[0]}/assign`, { assignedTo: selectedUser });
-            } else {
-                // Bulk assignment
-                await API.patch('/admin/leads/bulk/assign', { leadIds, assignedTo: selectedUser });
-            }
+            // Unified assignment endpoint for both single and bulk
+            await API.post(`/projects/${projectId}/leads/assign`, { 
+                leadIds, 
+                assignedTo: selectedUser 
+            });
+            
             onComplete();
             onClose();
         } catch (err) {

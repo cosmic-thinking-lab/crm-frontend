@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import API from '../../api/axios';
 import {
     Plus,
@@ -12,16 +12,20 @@ import {
     ChevronRight,
     Mail,
     Phone,
-    BadgeAlert
+    BadgeAlert,
+    Trash2,
+    UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../../components/Modal';
 import LeadForm from '../../components/LeadForm';
 import ImportLeadsModal from '../../components/ImportLeadsModal';
 import LeadActionModal from '../../components/LeadActionModal';
+import AssignLeadModal from '../../components/AssignLeadModal';
 
 const LeadManagement = () => {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const lmsType = searchParams.get('lmsType') || 'School LMS'; // Default fallback
     
     const [leads, setLeads] = useState([]);
@@ -29,26 +33,51 @@ const LeadManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [updatingLead, setUpdatingLead] = useState(null);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [selectedLeadIds, setSelectedLeadIds] = useState([]);
     const [formLoading, setFormLoading] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState({
         status: '',
-        priority: '',
-        source: ''
+        priority: ''
     });
+    const [resolvedProject, setResolvedProject] = useState(null);
+    const [projectsLoading, setProjectsLoading] = useState(true);
+
+    // First, resolve the project ID from lmsType
+    useEffect(() => {
+        const resolveProject = async () => {
+            setProjectsLoading(true);
+            try {
+                const { data } = await API.get('/projects');
+                const allProjects = data.data || [];
+                const matched = allProjects.find(p => p.name === lmsType);
+                if (matched) {
+                    setResolvedProject(matched);
+                } else {
+                    console.error("No project found matching lmsType:", lmsType);
+                }
+            } catch (error) {
+                console.error("Failed to fetch projects for resolution", error);
+            } finally {
+                setProjectsLoading(false);
+            }
+        };
+        resolveProject();
+    }, [lmsType]);
 
     const fetchLeads = async () => {
+        if (!resolvedProject) return;
         setLoading(true);
         try {
             const query = new URLSearchParams();
             if (filters.status) query.append('status', filters.status);
             if (filters.priority) query.append('priority', filters.priority);
-            if (filters.source) query.append('source', filters.source);
             if (searchTerm) query.append('search', searchTerm);
 
-            const { data } = await API.get(`/admin/${encodeURIComponent(lmsType)}/leads?${query.toString()}`);
-            setLeads(data);
+            const { data } = await API.get(`/projects/${resolvedProject._id}/leads?${query.toString()}`);
+            setLeads(data.data || data); // Handle both wrapped and unwrapped data
         } catch (error) {
             console.error("Failed to fetch leads", error);
         } finally {
@@ -57,25 +86,30 @@ const LeadManagement = () => {
     };
 
     useEffect(() => {
-        fetchLeads();
-    }, [filters, searchTerm, lmsType]);
+        if (resolvedProject) {
+            fetchLeads();
+        }
+    }, [filters, searchTerm, resolvedProject]);
 
     const handleCreateLead = async (formData) => {
+        if (!resolvedProject) return;
         setFormLoading(true);
         try {
-            await API.post(`/admin/${encodeURIComponent(lmsType)}/leads`, formData);
+            await API.post(`/projects/${resolvedProject._id}/leads`, formData);
             setIsModalOpen(false);
             fetchLeads();
         } catch (error) {
             console.error("Failed to create lead", error);
+            alert(error.response?.data?.message || "Failed to create lead");
         } finally {
             setFormLoading(false);
         }
     };
 
     const handleExport = async () => {
+        if (!resolvedProject) return;
         try {
-            const response = await API.get(`/admin/${encodeURIComponent(lmsType)}/leads/export`, {
+            const response = await API.get(`/projects/${resolvedProject._id}/leads/export`, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -91,22 +125,41 @@ const LeadManagement = () => {
     };
 
     const getPriorityColor = (priority) => {
-        switch (priority) {
-            case 'High': return '#f43f5e';
-            case 'Medium': return '#f59e0b';
-            case 'Low': return '#10b981';
+        const p = priority?.toLowerCase();
+        switch (p) {
+            case 'high':
+            case 'urgent': return '#f43f5e';
+            case 'medium': return '#f59e0b';
+            case 'low': return '#10b981';
             default: return '#94a3b8';
         }
     };
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'New': return '#0ea5e9';
-            case 'Contacted': return '#6366f1';
-            case 'Qualified': return '#10b981';
-            case 'Converted': return '#8b5cf6';
-            case 'Junk': return '#ef4444';
+        const s = status?.toLowerCase();
+        switch (s) {
+            case 'new': return '#0ea5e9';
+            case 'contacted': return '#6366f1';
+            case 'qualified': return '#10b981';
+            case 'proposal_sent':
+            case 'negotiation':
+            case 'converted': return '#8b5cf6';
+            case 'lost':
+            case 'junk': return '#ef4444';
             default: return '#94a3b8';
+        }
+    };
+
+    const handleDeleteLead = async (leadId) => {
+        if (!resolvedProject) return;
+        if (!window.confirm("Are you sure you want to delete this lead? This action cannot be undone.")) return;
+
+        try {
+            await API.delete(`/projects/${resolvedProject._id}/leads/${leadId}`);
+            fetchLeads(); // Refresh list
+        } catch (error) {
+            console.error("Failed to delete lead", error);
+            alert(error.response?.data?.message || "Failed to delete lead");
         }
     };
 
@@ -118,6 +171,16 @@ const LeadManagement = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Manage and track all customer inquiries</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
+                    {selectedLeadIds.length > 0 && (
+                        <button 
+                            className="btn btn-secondary" 
+                            onClick={() => setIsAssignModalOpen(true)}
+                            style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid var(--secondary)', color: 'var(--secondary)' }}
+                        >
+                            <UserPlus size={18} />
+                            Assign ({selectedLeadIds.length})
+                        </button>
+                    )}
                     <button className="btn btn-secondary" onClick={handleExport}>
                         <Download size={18} />
                         Export
@@ -154,6 +217,7 @@ const LeadManagement = () => {
                         onClose={() => setUpdatingLead(null)}
                         onComplete={fetchLeads}
                         isAdmin={true}
+                        projectId={resolvedProject?._id}
                     />
                 )}
             </Modal>
@@ -164,8 +228,24 @@ const LeadManagement = () => {
                 title="Bulk Import Leads"
             >
                 <ImportLeadsModal
-                    productType={lmsType}
+                    projectId={resolvedProject?._id}
                     onClose={() => setIsImportModalOpen(false)}
+                    onComplete={fetchLeads}
+                />
+            </Modal>
+
+            <Modal
+                isOpen={isAssignModalOpen}
+                onClose={() => setIsAssignModalOpen(false)}
+                title="Bulk Assign Leads"
+            >
+                <AssignLeadModal
+                    leads={selectedLeadIds}
+                    projectId={resolvedProject?._id}
+                    onClose={() => {
+                        setIsAssignModalOpen(false);
+                        setSelectedLeadIds([]);
+                    }}
                     onComplete={fetchLeads}
                 />
             </Modal>
@@ -191,11 +271,11 @@ const LeadManagement = () => {
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                 >
                     <option value="">All Statuses</option>
-                    <option value="New">New</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Qualified">Qualified</option>
-                    <option value="Converted">Converted</option>
-                    <option value="Junk">Junk</option>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="converted">Converted</option>
+                    <option value="lost">Lost</option>
                 </select>
                 <select
                     className="input-field"
@@ -204,11 +284,12 @@ const LeadManagement = () => {
                     onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
                 >
                     <option value="">All Priorities</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                    <option value="urgent">Urgent</option>
                 </select>
-                <button className="btn btn-secondary" onClick={() => setFilters({ status: '', priority: '', source: '' })}>
+                <button className="btn btn-secondary" onClick={() => setFilters({ status: '', priority: '' })}>
                     Reset
                 </button>
             </div>
@@ -217,6 +298,20 @@ const LeadManagement = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
                         <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--glass-border)' }}>
+                            <th style={{ padding: '16px 24px', width: '40px' }}>
+                                <input 
+                                    type="checkbox" 
+                                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                                    checked={leads.length > 0 && selectedLeadIds.length === leads.length}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setSelectedLeadIds(leads.map(l => l._id));
+                                        } else {
+                                            setSelectedLeadIds([]);
+                                        }
+                                    }}
+                                />
+                            </th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>LEAD NAME</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>STATUS</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>PRIORITY</th>
@@ -244,8 +339,34 @@ const LeadManagement = () => {
                                     className="table-row-hover"
                                 >
                                     <td style={{ padding: '16px 24px' }}>
+                                        <input 
+                                            type="checkbox" 
+                                            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                                            checked={selectedLeadIds.includes(lead._id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedLeadIds([...selectedLeadIds, lead._id]);
+                                                } else {
+                                                    setSelectedLeadIds(selectedLeadIds.filter(id => id !== lead._id));
+                                                }
+                                            }}
+                                        />
+                                    </td>
+                                    <td style={{ padding: '16px 24px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontWeight: '600', marginBottom: '4px' }}>{lead.name}</span>
+                                            <span 
+                                                onClick={() => navigate(`/admin/projects/${resolvedProject._id}/leads/${lead._id}`)}
+                                                style={{ 
+                                                    fontWeight: '600', 
+                                                    marginBottom: '4px', 
+                                                    cursor: 'pointer',
+                                                    color: 'var(--primary)',
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                                onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                            >
+                                                {lead.name}
+                                            </span>
                                             <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} />{lead.phone}</span>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} />{lead.email}</span>
@@ -253,29 +374,30 @@ const LeadManagement = () => {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <span style={{
-                                            padding: '4px 10px',
-                                            borderRadius: '20px',
-                                            fontSize: '12px',
-                                            fontWeight: '600',
-                                            background: `${getStatusColor(lead.status)}20`,
-                                            color: getStatusColor(lead.status),
-                                            border: `1px solid ${getStatusColor(lead.status)}40`
-                                        }}>
-                                            {lead.status}
-                                        </span>
+                                            <span style={{
+                                                padding: '4px 10px',
+                                                borderRadius: '20px',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                background: `${getStatusColor(lead.status)}20`,
+                                                color: getStatusColor(lead.status),
+                                                border: `1px solid ${getStatusColor(lead.status)}40`,
+                                                textTransform: 'capitalize'
+                                            }}>
+                                                {lead.status?.replace('_', ' ')}
+                                            </span>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getPriorityColor(lead.priority) }} />
-                                            <span style={{ fontSize: '13px' }}>{lead.priority}</span>
+                                            <span style={{ fontSize: '13px', textTransform: 'capitalize' }}>{lead.priority}</span>
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px', color: 'var(--text-muted)', fontSize: '13px' }}>
                                         {new Date(lead.createdAt).toLocaleDateString()}
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                             <button
                                                 className="btn btn-secondary"
                                                 style={{ padding: '6px 12px', fontSize: '12px' }}
@@ -283,8 +405,25 @@ const LeadManagement = () => {
                                             >
                                                 Update
                                             </button>
-                                            <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                                                <MoreVertical size={18} />
+                                            <button 
+                                                style={{ 
+                                                    background: 'none', 
+                                                    border: 'none', 
+                                                    color: '#ef4444', 
+                                                    cursor: 'pointer',
+                                                    padding: '6px',
+                                                    borderRadius: '8px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    transition: 'var(--transition)'
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                                                onClick={() => handleDeleteLead(lead._id)}
+                                                title="Delete Lead"
+                                            >
+                                                <Trash2 size={18} />
                                             </button>
                                         </div>
                                     </td>

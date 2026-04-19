@@ -51,21 +51,25 @@ const MyLeads = () => {
     }, [filters, searchTerm]);
 
     const getPriorityColor = (priority) => {
-        switch (priority) {
-            case 'High': return '#f43f5e';
-            case 'Medium': return '#f59e0b';
-            case 'Low': return '#10b981';
+        const p = priority?.toLowerCase();
+        switch (p) {
+            case 'high':
+            case 'urgent': return '#f43f5e';
+            case 'medium': return '#f59e0b';
+            case 'low': return '#10b981';
             default: return '#94a3b8';
         }
     };
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'New': return '#0ea5e9';
-            case 'Contacted': return '#6366f1';
-            case 'Qualified': return '#10b981';
-            case 'Converted': return '#8b5cf6';
-            case 'Junk': return '#ef4444';
+        const s = status?.toLowerCase();
+        switch (s) {
+            case 'new': return '#0ea5e9';
+            case 'contacted': return '#6366f1';
+            case 'qualified': return '#10b981';
+            case 'converted': return '#8b5cf6';
+            case 'lost':
+            case 'junk': return '#ef4444';
             default: return '#94a3b8';
         }
     };
@@ -109,10 +113,10 @@ const MyLeads = () => {
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                 >
                     <option value="">All Statuses</option>
-                    <option value="New">New</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Qualified">Qualified</option>
-                    <option value="Converted">Converted</option>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="converted">Converted</option>
                 </select>
                 <button className="btn btn-secondary" onClick={() => setFilters({ status: '', priority: '' })}>
                     Reset
@@ -183,7 +187,7 @@ const MyLeads = () => {
                                         background: `${getPriorityColor(lead.priority)}20`,
                                         color: getPriorityColor(lead.priority),
                                         marginBottom: '10px',
-                                        textTransform: 'uppercase'
+                                        textTransform: 'capitalize'
                                     }}>
                                         {lead.priority} Priority
                                     </span>
@@ -196,9 +200,10 @@ const MyLeads = () => {
                                     fontWeight: '600',
                                     background: `${getStatusColor(lead.status)}20`,
                                     color: getStatusColor(lead.status),
-                                    border: `1px solid ${getStatusColor(lead.status)}40`
+                                    border: `1px solid ${getStatusColor(lead.status)}40`,
+                                    textTransform: 'capitalize'
                                 }}>
-                                    {lead.status}
+                                    {lead.status?.replace('_', ' ')}
                                 </span>
                             </div>
 

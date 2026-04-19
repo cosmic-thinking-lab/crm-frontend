@@ -73,7 +73,7 @@ function AppContent() {
               <Route path="users" element={<UserManagement />} />
               <Route path="users/:id/leads" element={<BDALeads />} />
               <Route path="leads" element={<LeadManagement />} />
-              <Route path="leads/:id" element={<LeadDetail role="Admin" />} />
+              <Route path="projects/:projectId/leads/:id" element={<LeadDetail role="Admin" />} />
               <Route path="lms/:lmsType/dashboard" element={<LmsDashboard />} />
               <Route path="lms/:lmsType/bdas" element={<LmsBdas />} />
               <Route path="lms/:lmsType/bda/:bdaId/leads" element={<LmsBdaLeads />} />
@@ -89,7 +89,7 @@ function AppContent() {
             <Routes>
               <Route path="dashboard" element={<BDADashboard />} />
               <Route path="leads" element={<MyLeads />} />
-              <Route path="leads/:id" element={<LeadDetail role="BDA" />} />
+              <Route path="projects/:projectId/leads/:id" element={<LeadDetail role="BDA" />} />
             </Routes>
           </Layout>
         </ProtectedRoute>

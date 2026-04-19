@@ -41,12 +41,14 @@ const LmsBdaLeads = () => {
     }, [lmsType, bdaId]);
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'New': return '#0ea5e9';
-            case 'Contacted': return '#6366f1';
-            case 'Qualified': return '#10b981';
-            case 'Converted': return '#8b5cf6';
-            case 'Junk': return '#ef4444';
+        const s = status?.toLowerCase();
+        switch (s) {
+            case 'new': return '#0ea5e9';
+            case 'contacted': return '#6366f1';
+            case 'qualified': return '#10b981';
+            case 'converted': return '#8b5cf6';
+            case 'lost':
+            case 'junk': return '#ef4444';
             default: return '#94a3b8';
         }
     };
@@ -137,9 +139,10 @@ const LmsBdaLeads = () => {
                                             fontWeight: '600',
                                             background: `${getStatusColor(lead.status)}20`,
                                             color: getStatusColor(lead.status),
-                                            border: `1px solid ${getStatusColor(lead.status)}40`
+                                            border: `1px solid ${getStatusColor(lead.status)}40`,
+                                            textTransform: 'capitalize'
                                         }}>
-                                            {lead.status}
+                                            {lead.status?.replace('_', ' ')}
                                         </span>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
@@ -148,9 +151,9 @@ const LmsBdaLeads = () => {
                                                 width: '8px',
                                                 height: '8px',
                                                 borderRadius: '50%',
-                                                background: lead.priority === 'High' ? '#f43f5e' : lead.priority === 'Medium' ? '#f59e0b' : '#10b981'
+                                                background: lead.priority?.toLowerCase() === 'high' || lead.priority?.toLowerCase() === 'urgent' ? '#f43f5e' : lead.priority?.toLowerCase() === 'medium' ? '#f59e0b' : '#10b981'
                                             }} />
-                                            <span style={{ fontSize: '13px' }}>{lead.priority}</span>
+                                            <span style={{ fontSize: '13px', textTransform: 'capitalize' }}>{lead.priority}</span>
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px', color: 'var(--text-muted)', fontSize: '13px' }}>
