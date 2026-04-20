@@ -126,7 +126,7 @@ const LeadDetail = ({ role }) => {
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Lead ID: {lead._id}</p>
                 </div>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
-                    {role === 'Admin' && (
+                    {(role === 'Admin' || role === 'Manager') && (
                         <>
                             <button className="btn btn-secondary"><Edit2 size={18} /> Edit</button>
                             <button className="btn btn-secondary" style={{ color: 'var(--accent)' }}><Trash2 size={18} /> Delete</button>
@@ -178,7 +178,7 @@ const LeadDetail = ({ role }) => {
                                 <span style={{ fontWeight: '600' }}>{lead.assignedTo?.name || 'Unassigned'}</span>
                             </div>
                         </div>
-                        {role === 'BDA' && (
+                        {(role === 'BDA' || role === 'Manager' || role === 'Admin') && (
                             <button className="btn btn-primary" style={{ width: '100%', marginTop: '20px', justifyContent: 'center' }}>
                                 Update Status
                             </button>

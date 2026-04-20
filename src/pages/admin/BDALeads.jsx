@@ -24,13 +24,13 @@ const BDALeads = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Fetch BDA info to get the name
-                const { data: bdaData } = await API.get(`/admin/users/${id}`);
-                setBdaInfo(bdaData);
+                // Fetch user info
+                const { data: userData } = await API.get(`/users/${id}`);
+                setBdaInfo(userData.data); // data: { name, email, ..., projectRoles }
 
-                // Fetch leads assigned to this BDA
-                const { data: leadsData } = await API.get(`/admin/leads?assignedTo=${id}`);
-                setLeads(leadsData);
+                // Fetch all leads assigned to this user (across all projects)
+                const { data: leadsData } = await API.get(`/users/${id}/leads`);
+                setLeads(leadsData.data || []);
             } catch (error) {
                 console.error("Failed to fetch BDA leads data", error);
             } finally {
@@ -118,6 +118,7 @@ const BDALeads = () => {
                     <thead>
                         <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--glass-border)' }}>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>LEAD NAME</th>
+                            <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>PROJECT</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>STATUS</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>PRIORITY</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>DATE ADDED</th>
@@ -151,6 +152,11 @@ const BDALeads = () => {
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} />{lead.email}</span>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td style={{ padding: '16px 24px' }}>
+                                        <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '6px', background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', fontWeight: '600' }}>
+                                            {lead.projectId?.name || 'N/A'}
+                                        </span>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
                                             <span style={{
@@ -206,16 +212,10 @@ const BDALeads = () => {
                         lead={updatingLead}
                         onClose={() => setUpdatingLead(null)}
                         onComplete={() => {
-                            // Refresh data
-                            const fetchData = async () => {
-                                try {
-                                    const { data: leadsData } = await API.get(`/admin/leads?assignedTo=${id}`);
-                                    setLeads(leadsData);
-                                } catch (error) {
-                                    console.error("Failed to refresh leads", error);
-                                }
-                            };
-                            fetchData();
+                            // Refresh leads using correct endpoint
+                            API.get(`/users/${id}/leads`).then(({ data }) => {
+                                setLeads(data.data || []);
+                            }).catch(err => console.error("Failed to refresh leads", err));
                         }}
                         isAdmin={true}
                     />

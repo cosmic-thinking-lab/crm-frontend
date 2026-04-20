@@ -5,7 +5,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 
 // Protected Route Component
-const ProtectedRoute = ({ children, role }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -27,9 +27,8 @@ const ProtectedRoute = ({ children, role }) => {
     return <Navigate to="/login" />;
   }
 
-  if (role && user.role !== role) {
-    if (user.role === 'Admin') return <Navigate to="/admin/dashboard" />;
-    if (user.role === 'Manager') return <Navigate to="/admin/dashboard" />; // Managers currently share dashboard view
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    if (user.role === 'Admin' || user.role === 'Manager') return <Navigate to="/admin/overview" />;
     return <Navigate to="/bda/dashboard" />;
   }
 
@@ -46,6 +45,7 @@ import LeadDetail from './pages/common/LeadDetail';
 import LmsDashboard from './pages/admin/LmsDashboard';
 import LmsBdas from './pages/admin/LmsBdas';
 import LmsBdaLeads from './pages/admin/LmsBdaLeads';
+import Overview from './pages/admin/Overview';
 
 function AppContent() {
   const { user } = useAuth();
@@ -57,7 +57,7 @@ function AppContent() {
       <Route path="/" element={
         <ProtectedRoute>
           <Layout>
-            {user?.role === 'Admin' || user?.role === 'Manager' ? <Navigate to="/admin/dashboard" /> : <Navigate to="/bda/dashboard" />}
+            {user?.role === 'Admin' || user?.role === 'Manager' ? <Navigate to="/admin/overview" /> : <Navigate to="/bda/dashboard" />}
           </Layout>
         </ProtectedRoute>
       } />
@@ -66,14 +66,15 @@ function AppContent() {
 
       {/* Admin Routes with sidebar */}
       <Route path="/admin/*" element={
-        <ProtectedRoute role="Admin">
+        <ProtectedRoute allowedRoles={['Admin', 'Manager']}>
           <Layout>
             <Routes>
+              <Route path="overview" element={<Overview />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="users/:id/leads" element={<BDALeads />} />
               <Route path="leads" element={<LeadManagement />} />
-              <Route path="projects/:projectId/leads/:id" element={<LeadDetail role="Admin" />} />
+              <Route path="projects/:projectId/leads/:id" element={<LeadDetail role={user?.role} />} />
               <Route path="lms/:lmsType/dashboard" element={<LmsDashboard />} />
               <Route path="lms/:lmsType/bdas" element={<LmsBdas />} />
               <Route path="lms/:lmsType/bda/:bdaId/leads" element={<LmsBdaLeads />} />
@@ -84,7 +85,7 @@ function AppContent() {
 
       {/* BDA Routes */}
       <Route path="/bda/*" element={
-        <ProtectedRoute role="BDA">
+        <ProtectedRoute allowedRoles={['BDA']}>
           <Layout>
             <Routes>
               <Route path="dashboard" element={<BDADashboard />} />

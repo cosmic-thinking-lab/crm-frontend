@@ -10,7 +10,8 @@ import {
     Target,
     Sun,
     Moon,
-    ArrowLeft
+    ArrowLeft,
+    Folder
 } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import Notifications from './Notifications';
@@ -57,7 +58,8 @@ const Layout = ({ children }) => {
     const currentLmsType = urlLmsType || searchParams.get('lmsType') || currentLmsTypeFromPath;
 
     const adminMenu = [
-        { icon: LayoutDashboard, label: 'Projects', path: '/admin/dashboard' },
+        { icon: LayoutDashboard, label: 'Overview', path: '/admin/overview' },
+        { icon: Folder, label: 'Projects', path: '/admin/dashboard' },
         { icon: Users, label: 'Teams', path: '/admin/users' },
     ];
 
@@ -90,7 +92,7 @@ const Layout = ({ children }) => {
         { icon: Target, label: 'My Leads', path: '/bda/leads' },
     ];
 
-    const menu = productMenu || (user?.role === 'Admin' ? adminMenu : bdaMenu);
+    const menu = productMenu || ((user?.role === 'Admin' || user?.role === 'Manager') ? adminMenu : bdaMenu);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'transparent' }}>

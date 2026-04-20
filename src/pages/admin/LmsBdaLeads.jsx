@@ -24,13 +24,19 @@ const LmsBdaLeads = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Fetch BDA info
-                const { data: bdaData } = await API.get(`/admin/users/${bdaId}`);
-                setBdaInfo(bdaData);
+                // Fetch BDA user info
+                const { data: userData } = await API.get(`/users/${bdaId}`);
+                setBdaInfo(userData.data); // data: { name, email, ..., projectRoles }
 
-                // Fetch leads assigned to this BDA and filtered by lmsType
-                const { data: leadsData } = await API.get(`/admin/leads?assignedTo=${bdaId}&lmsType=${encodeURIComponent(lmsType)}`);
-                setLeads(leadsData);
+                // Fetch all leads for this user, then filter by project name (lmsType)
+                const { data: leadsData } = await API.get(`/users/${bdaId}/leads?limit=200`);
+                const allLeads = leadsData.data || [];
+
+                // Filter to only show leads from the current LMS project
+                const filtered = allLeads.filter(
+                    lead => lead.projectId?.name === decodeURIComponent(lmsType)
+                );
+                setLeads(filtered);
             } catch (error) {
                 console.error("Failed to fetch BDA leads data", error);
             } finally {

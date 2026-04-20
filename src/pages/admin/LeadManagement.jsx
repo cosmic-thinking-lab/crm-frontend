@@ -42,6 +42,10 @@ const LeadManagement = () => {
         status: '',
         priority: ''
     });
+    const [page, setPage] = useState(1);
+    const [limit] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalLeads, setTotalLeads] = useState(0);
     const [resolvedProject, setResolvedProject] = useState(null);
     const [projectsLoading, setProjectsLoading] = useState(true);
 
@@ -75,9 +79,14 @@ const LeadManagement = () => {
             if (filters.status) query.append('status', filters.status);
             if (filters.priority) query.append('priority', filters.priority);
             if (searchTerm) query.append('search', searchTerm);
+            query.append('page', page);
+            query.append('limit', limit);
+            query.append('sort', '-createdAt');
 
             const { data } = await API.get(`/projects/${resolvedProject._id}/leads?${query.toString()}`);
-            setLeads(data.data || data); // Handle both wrapped and unwrapped data
+            setLeads(data.data || []);
+            setTotalLeads(data.total || 0);
+            setTotalPages(data.pagination?.pages || 1);
         } catch (error) {
             console.error("Failed to fetch leads", error);
         } finally {
@@ -87,9 +96,16 @@ const LeadManagement = () => {
 
     useEffect(() => {
         if (resolvedProject) {
+            setPage(1); // Reset to page 1 on filter/search change
             fetchLeads();
         }
     }, [filters, searchTerm, resolvedProject]);
+
+    useEffect(() => {
+        if (resolvedProject) {
+            fetchLeads();
+        }
+    }, [page]);
 
     const handleCreateLead = async (formData) => {
         if (!resolvedProject) return;
@@ -434,11 +450,40 @@ const LeadManagement = () => {
                 </table>
 
                 <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)' }}>
-                    <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Showing {leads.length} leads</p>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <button className="btn btn-secondary" style={{ padding: '6px 10px' }}><ChevronLeft size={16} /></button>
-                        <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '13px' }}>1</button>
-                        <button className="btn btn-secondary" style={{ padding: '6px 10px' }}><ChevronRight size={16} /></button>
+                    <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                        Showing {leads.length} of {totalLeads} leads
+                        {totalPages > 1 && ` — Page ${page} of ${totalPages}`}
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button 
+                            className="btn btn-secondary" 
+                            style={{ padding: '6px 10px' }}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                        >
+                            <ChevronLeft size={16} />
+                        </button>
+                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                            const pageNum = i + 1;
+                            return (
+                                <button
+                                    key={pageNum}
+                                    className={page === pageNum ? 'btn btn-primary' : 'btn btn-secondary'}
+                                    style={{ padding: '6px 12px', fontSize: '13px', minWidth: '36px' }}
+                                    onClick={() => setPage(pageNum)}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
+                        <button 
+                            className="btn btn-secondary" 
+                            style={{ padding: '6px 10px' }}
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                        >
+                            <ChevronRight size={16} />
+                        </button>
                     </div>
                 </div>
             </div>

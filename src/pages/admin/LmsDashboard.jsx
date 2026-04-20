@@ -60,7 +60,7 @@ const LmsDashboard = () => {
             try {
                 // For now we use the main dashboard stats and filter on frontend
                 // In a real scenario, we might have /admin/dashboard?lmsType=...
-                const { data } = await API.get('/admin/dashboard');
+                const { data } = await API.get('/dashboard/global');
                 
                 // Filtering leads and performance for this specific LMS
                 // Note: The backend doesn't yet support per-LMS aggregation in getDashboardStats
