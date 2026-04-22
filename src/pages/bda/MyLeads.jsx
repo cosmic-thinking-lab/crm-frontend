@@ -38,9 +38,11 @@ const MyLeads = () => {
             if (searchTerm) query.append('search', searchTerm);
 
             const { data } = await API.get(`/bda/leads?${query.toString()}`);
-            setLeads(data);
+            console.log('BDA Leads API Response:', data);
+            setLeads(data.data);
         } catch (error) {
             console.error("Failed to fetch my leads", error);
+            if (error.response) console.error("Error response:", error.response.data);
         } finally {
             setLoading(false);
         }

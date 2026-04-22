@@ -5,7 +5,7 @@ const UserForm = ({ onSubmit, initialData, loading, showRole = false }) => {
         name: initialData?.name || '',
         email: initialData?.email || '',
         phone: initialData?.phone || '',
-        role: initialData?.role || 'bda',
+        globalRole: initialData?.globalRole || 'bda',
         password: ''
     });
     const [imagePreview, setImagePreview] = useState(initialData?.profileImage || null);
@@ -35,7 +35,7 @@ const UserForm = ({ onSubmit, initialData, loading, showRole = false }) => {
             phone: formData.phone
         };
         if (showRole) {
-            payload.role = formData.role;
+            payload.globalRole = formData.globalRole;
         }
         if (formData.password) {
             payload.password = formData.password;
@@ -120,17 +120,17 @@ const UserForm = ({ onSubmit, initialData, loading, showRole = false }) => {
             </div>
             {showRole && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Project Role</label>
+                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Account Global Role</label>
                     <select
-                        name="role"
+                        name="globalRole"
                         className="input-field"
                         style={{ background: 'var(--bg-dark)' }}
-                        value={formData.role}
+                        value={formData.globalRole}
                         onChange={handleChange}
                         required
                     >
-                        <option value="bda">BDA (Team Member)</option>
-                        <option value="manager">Project Manager</option>
+                        <option value="bda">BDA (Default User)</option>
+                        <option value="manager">Manager (Admin Access)</option>
                     </select>
                 </div>
             )}

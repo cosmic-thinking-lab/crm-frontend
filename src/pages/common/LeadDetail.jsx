@@ -27,8 +27,17 @@ const LeadDetail = ({ role }) => {
     const [loading, setLoading] = useState(true);
     const [notesLoading, setNotesLoading] = useState(false);
     const [newNote, setNewNote] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
     const [editingNoteId, setEditingNoteId] = useState(null);
     const [editingContent, setEditingContent] = useState('');
+    const [editData, setEditData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        organization: '',
+        priority: ''
+    });
 
     const fetchNotes = async () => {
         if (!id || !projectId) return;
@@ -48,7 +57,15 @@ const LeadDetail = ({ role }) => {
         try {
             // Use project-scoped endpoint for lead details
             const { data: leadData } = await API.get(`/projects/${projectId}/leads/${id}`);
-            setLead(leadData.data || leadData);
+            const leadObj = leadData.data || leadData;
+            setLead(leadObj);
+            setEditData({
+                name: leadObj.name,
+                email: leadObj.email,
+                phone: leadObj.phone,
+                organization: leadObj.organization || '',
+                priority: leadObj.priority
+            });
 
             // Use project-scoped endpoint for history
             const { data: historyData } = await API.get(`/projects/${projectId}/leads/${id}/history`);
@@ -68,6 +85,48 @@ const LeadDetail = ({ role }) => {
             fetchLeadData();
         }
     }, [id, projectId]);
+
+    const handleUpdateLead = async (e) => {
+        e.preventDefault();
+        try {
+            const { data } = await API.patch(`/projects/${projectId}/leads/${id}`, editData);
+            setLead(data.data);
+            setIsEditing(false);
+            fetchLeadData(); // Refresh to get history entry
+        } catch (error) {
+            console.error("Failed to update lead", error);
+            const errorMsg = error.response?.data?.message || 
+                           (error.response?.data?.errors ? error.response.data.errors.map(e => e.message).join(', ') : null) || 
+                           "Failed to update lead";
+            alert(errorMsg);
+        }
+    };
+
+    const handleUpdateStatus = async (newStatus) => {
+        try {
+            const { data } = await API.patch(`/projects/${projectId}/leads/${id}`, { status: newStatus });
+            setLead(data.data);
+            setIsUpdatingStatus(false);
+            fetchLeadData(); // Refresh to get history entry
+        } catch (error) {
+            console.error("Failed to update status", error);
+            const errorMsg = error.response?.data?.message || 
+                           (error.response?.data?.errors ? error.response.data.errors.map(e => e.message).join(', ') : null) || 
+                           "Failed to update status";
+            alert(errorMsg);
+        }
+    };
+
+    const handleDeleteLead = async () => {
+        if (!window.confirm("Are you sure you want to delete this lead? This action cannot be undone.")) return;
+        try {
+            await API.delete(`/projects/${projectId}/leads/${id}`);
+            navigate(-1);
+        } catch (error) {
+            console.error("Failed to delete lead", error);
+            alert(error.response?.data?.message || "Failed to delete lead");
+        }
+    };
 
     const addNote = async (e) => {
         e.preventDefault();
@@ -112,7 +171,126 @@ const LeadDetail = ({ role }) => {
     if (!lead) return <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>Lead not found.</div>;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
+            {/* Edit Modal */}
+            {isEditing && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(8px)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}>
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="glass-card" 
+                        style={{ width: '100%', maxWidth: '500px', padding: '32px' }}
+                    >
+                        <h2 className="text-gradient" style={{ fontSize: '24px', marginBottom: '24px' }}>Edit Lead Details</h2>
+                        <form onSubmit={handleUpdateLead} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>Full Name</label>
+                                <input 
+                                    className="input-field" 
+                                    value={editData.name} 
+                                    onChange={(e) => setEditData({...editData, name: e.target.value})} 
+                                    required 
+                                />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>Email</label>
+                                    <input 
+                                        type="email" 
+                                        className="input-field" 
+                                        value={editData.email} 
+                                        onChange={(e) => setEditData({...editData, email: e.target.value})} 
+                                        required 
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>Phone</label>
+                                    <input 
+                                        className="input-field" 
+                                        value={editData.phone} 
+                                        onChange={(e) => setEditData({...editData, phone: e.target.value})} 
+                                        required 
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>Organization</label>
+                                <input 
+                                    className="input-field" 
+                                    value={editData.organization} 
+                                    onChange={(e) => setEditData({...editData, organization: e.target.value})} 
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>Priority</label>
+                                <select 
+                                    className="input-field" 
+                                    value={editData.priority} 
+                                    onChange={(e) => setEditData({...editData, priority: e.target.value})}
+                                >
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                                <button type="button" className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setIsEditing(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>Save Changes</button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Status Modal */}
+            {isUpdatingStatus && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(8px)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}>
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="glass-card" 
+                        style={{ width: '100%', maxWidth: '400px', padding: '32px' }}
+                    >
+                        <h2 className="text-gradient" style={{ fontSize: '22px', marginBottom: '20px' }}>Update Lead Status</h2>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+                            {['new', 'contacted', 'qualified', 'proposal_sent', 'negotiation', 'converted', 'lost'].map(status => (
+                                <button 
+                                    key={status}
+                                    className={`btn ${lead.status === status ? 'btn-primary' : 'btn-secondary'}`}
+                                    style={{ justifyContent: 'flex-start', padding: '12px 20px' }}
+                                    onClick={() => handleUpdateStatus(status)}
+                                >
+                                    {status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                    {lead.status === status && <Check size={16} style={{ marginLeft: 'auto' }} />}
+                                </button>
+                            ))}
+                            <button className="btn btn-secondary" style={{ marginTop: '10px', justifyContent: 'center' }} onClick={() => setIsUpdatingStatus(false)}>Cancel</button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <button
                     onClick={() => navigate(-1)}
@@ -128,8 +306,8 @@ const LeadDetail = ({ role }) => {
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
                     {(role === 'Admin' || role === 'Manager') && (
                         <>
-                            <button className="btn btn-secondary"><Edit2 size={18} /> Edit</button>
-                            <button className="btn btn-secondary" style={{ color: 'var(--accent)' }}><Trash2 size={18} /> Delete</button>
+                            <button className="btn btn-secondary" onClick={() => setIsEditing(true)}><Edit2 size={18} /> Edit</button>
+                            <button className="btn btn-secondary" style={{ color: 'var(--accent)' }} onClick={handleDeleteLead}><Trash2 size={18} /> Delete</button>
                         </>
                     )}
                 </div>
@@ -179,7 +357,11 @@ const LeadDetail = ({ role }) => {
                             </div>
                         </div>
                         {(role === 'BDA' || role === 'Manager' || role === 'Admin') && (
-                            <button className="btn btn-primary" style={{ width: '100%', marginTop: '20px', justifyContent: 'center' }}>
+                            <button 
+                                className="btn btn-primary" 
+                                style={{ width: '100%', marginTop: '20px', justifyContent: 'center' }}
+                                onClick={() => setIsUpdatingStatus(true)}
+                            >
                                 Update Status
                             </button>
                         )}

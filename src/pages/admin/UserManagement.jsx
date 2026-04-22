@@ -176,6 +176,7 @@ const UserManagement = () => {
                     onSubmit={selectedUser ? handleUpdateUser : handleCreateUser} 
                     loading={formLoading} 
                     initialData={selectedUser} 
+                    showRole={true}
                 />
             </Modal>
 
