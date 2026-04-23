@@ -46,6 +46,7 @@ import LmsDashboard from './pages/admin/LmsDashboard';
 import LmsBdas from './pages/admin/LmsBdas';
 import LmsBdaLeads from './pages/admin/LmsBdaLeads';
 import Overview from './pages/admin/Overview';
+import AddNotePage from './pages/bda/AddNotePage';
 
 function AppContent() {
   const { user } = useAuth();
@@ -90,6 +91,7 @@ function AppContent() {
             <Routes>
               <Route path="dashboard" element={<BDADashboard />} />
               <Route path="leads" element={<MyLeads />} />
+              <Route path="projects/:projectId/leads/:id/notes" element={<AddNotePage />} />
               <Route path="projects/:projectId/leads/:id" element={<LeadDetail role="BDA" />} />
             </Routes>
           </Layout>

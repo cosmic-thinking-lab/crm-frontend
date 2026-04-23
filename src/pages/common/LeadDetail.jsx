@@ -30,6 +30,7 @@ const LeadDetail = ({ role }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
     const [editingNoteId, setEditingNoteId] = useState(null);
+    const [error, setError] = useState(null);
     const [editingContent, setEditingContent] = useState('');
     const [editData, setEditData] = useState({
         name: '',
@@ -75,6 +76,7 @@ const LeadDetail = ({ role }) => {
             fetchNotes();
         } catch (error) {
             console.error("Failed to fetch lead details", error);
+            setError(error.response?.data?.message || "Failed to load lead details");
         } finally {
             setLoading(false);
         }
@@ -168,6 +170,15 @@ const LeadDetail = ({ role }) => {
     };
 
     if (loading) return <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>Loading lead details...</div>;
+    
+    if (error) return (
+        <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>
+            <h2 style={{ color: 'var(--accent)', marginBottom: '10px' }}>Error</h2>
+            <p>{error}</p>
+            <button className="btn btn-secondary" style={{ marginTop: '20px' }} onClick={() => navigate(-1)}>Go Back</button>
+        </div>
+    );
+
     if (!lead) return <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>Lead not found.</div>;
 
     return (
@@ -304,11 +315,11 @@ const LeadDetail = ({ role }) => {
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Lead ID: {lead._id}</p>
                 </div>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
+                    {(role === 'Admin' || role === 'Manager' || role === 'BDA') && (
+                        <button className="btn btn-secondary" onClick={() => setIsEditing(true)}><Edit2 size={18} /> Edit</button>
+                    )}
                     {(role === 'Admin' || role === 'Manager') && (
-                        <>
-                            <button className="btn btn-secondary" onClick={() => setIsEditing(true)}><Edit2 size={18} /> Edit</button>
-                            <button className="btn btn-secondary" style={{ color: 'var(--accent)' }} onClick={handleDeleteLead}><Trash2 size={18} /> Delete</button>
-                        </>
+                        <button className="btn btn-secondary" style={{ color: 'var(--accent)' }} onClick={handleDeleteLead}><Trash2 size={18} /> Delete</button>
                     )}
                 </div>
             </div>
@@ -320,7 +331,7 @@ const LeadDetail = ({ role }) => {
                         <h3 style={{ marginBottom: '20px', fontSize: '16px', fontWeight: '600' }}>Contact Information</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--primary)' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
                                     <div style={{ margin: 'auto' }}><Phone size={18} /></div>
                                 </div>
                                 <div>
@@ -329,7 +340,7 @@ const LeadDetail = ({ role }) => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'var(--secondary)' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--secondary)' }}>
                                     <div style={{ margin: 'auto' }}><Mail size={18} /></div>
                                 </div>
                                 <div>

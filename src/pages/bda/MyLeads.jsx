@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import API from '../../api/axios';
 import {
     Search,
@@ -19,6 +20,7 @@ import TransferLeadModal from '../../components/TransferLeadModal';
 import { UserPlus } from 'lucide-react';
 
 const MyLeads = () => {
+    const navigate = useNavigate();
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -175,8 +177,10 @@ const MyLeads = () => {
                                 flexDirection: 'column',
                                 gap: '16px',
                                 position: 'relative',
-                                overflow: 'hidden'
+                                overflow: 'hidden',
+                                cursor: 'pointer'
                             }}
+                            onClick={() => navigate(`/bda/projects/${lead.projectId?._id || lead.projectId || lead.project?._id}/leads/${lead._id}`)}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <div>
@@ -251,24 +255,34 @@ const MyLeads = () => {
 
                             <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
                                 <button
-                                    className="btn btn-secondary"
-                                    style={{ flex: 1, fontSize: '13px' }}
-                                    onClick={() => setUpdatingLead(lead)}
-                                >
-                                    Update Lead
-                                </button>
-                                <button
                                     className="btn btn-primary"
                                     style={{ padding: '10px', borderRadius: '10px' }}
-                                    onClick={() => setUpdatingLead(lead)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setUpdatingLead(lead);
+                                    }}
                                 >
                                     <Calendar size={18} />
                                 </button>
                                 <button
                                     className="btn btn-secondary"
                                     style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--secondary)', color: 'var(--secondary)' }}
+                                    title="Add Interaction Note"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/bda/projects/${lead.projectId?._id || lead.projectId || lead.project?._id}/leads/${lead._id}`);
+                                    }}
+                                >
+                                    <MessageSquare size={18} />
+                                </button>
+                                <button
+                                    className="btn btn-secondary"
+                                    style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--accent)', color: 'var(--accent)' }}
                                     title="Transfer to teammate"
-                                    onClick={() => setTransferringLead(lead)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setTransferringLead(lead);
+                                    }}
                                 >
                                     <UserPlus size={18} />
                                 </button>

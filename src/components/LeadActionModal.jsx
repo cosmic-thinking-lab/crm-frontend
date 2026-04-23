@@ -44,7 +44,7 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
         setSuccess('');
 
         try {
-            const resolvedProjectId = projectId || lead.projectId || lead.project?._id;
+            const resolvedProjectId = projectId || lead.projectId?._id || lead.projectId || lead.project?._id;
 
             if (!resolvedProjectId) {
                 setError('Project ID is missing for this lead');
