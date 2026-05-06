@@ -16,8 +16,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../../components/Modal';
 import LeadActionModal from '../../components/LeadActionModal';
-import TransferLeadModal from '../../components/TransferLeadModal';
-import { UserPlus } from 'lucide-react';
 
 const MyLeads = () => {
     const navigate = useNavigate();
@@ -29,7 +27,6 @@ const MyLeads = () => {
         priority: ''
     });
     const [updatingLead, setUpdatingLead] = useState(null);
-    const [transferringLead, setTransferringLead] = useState(null);
 
     const fetchLeads = async () => {
         setLoading(true);
@@ -60,7 +57,7 @@ const MyLeads = () => {
             case 'high':
             case 'urgent': return '#f43f5e';
             case 'medium': return '#f59e0b';
-            case 'low': return '#10b981';
+            case 'low': return '#a78bfa';
             default: return '#94a3b8';
         }
     };
@@ -70,7 +67,7 @@ const MyLeads = () => {
         switch (s) {
             case 'new': return '#0ea5e9';
             case 'contacted': return '#6366f1';
-            case 'qualified': return '#10b981';
+            case 'qualified': return '#a78bfa';
             case 'converted': return '#8b5cf6';
             case 'lost':
             case 'junk': return '#ef4444';
@@ -120,7 +117,11 @@ const MyLeads = () => {
                     <option value="new">New</option>
                     <option value="contacted">Contacted</option>
                     <option value="qualified">Qualified</option>
+                    <option value="proposal_sent">Proposal Sent</option>
+                    <option value="negotiation">Negotiation</option>
                     <option value="converted">Converted</option>
+                    <option value="lost">Lost</option>
+                    <option value="junk">Junk</option>
                 </select>
                 <button className="btn btn-secondary" onClick={() => setFilters({ status: '', priority: '' })}>
                     Reset
@@ -136,20 +137,6 @@ const MyLeads = () => {
                     <LeadActionModal
                         lead={updatingLead}
                         onClose={() => setUpdatingLead(null)}
-                        onComplete={fetchLeads}
-                    />
-                )}
-            </Modal>
-
-            <Modal
-                isOpen={!!transferringLead}
-                onClose={() => setTransferringLead(null)}
-                title="Transfer Lead to Team Member"
-            >
-                {transferringLead && (
-                    <TransferLeadModal
-                        lead={transferringLead}
-                        onClose={() => setTransferringLead(null)}
                         onComplete={fetchLeads}
                     />
                 )}
@@ -238,10 +225,10 @@ const MyLeads = () => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Clock
                                         size={14}
-                                        color={isUrgent ? 'var(--accent)' : isFuture ? '#10b981' : 'var(--primary)'}
+                                        color={isUrgent ? 'var(--accent)' : isFuture ? '#a78bfa' : 'var(--primary)'}
                                     />
                                     <span style={{
-                                        color: isUrgent ? 'var(--accent)' : isFuture ? '#10b981' : 'inherit',
+                                        color: isUrgent ? 'var(--accent)' : isFuture ? '#a78bfa' : 'inherit',
                                         fontWeight: (isUrgent || isFuture) ? '600' : 'normal'
                                     }}>
                                         Next Follow-up: {lead.followUpDate ? new Date(lead.followUpDate).toLocaleDateString() : 'Not scheduled'}
@@ -274,17 +261,6 @@ const MyLeads = () => {
                                     }}
                                 >
                                     <MessageSquare size={18} />
-                                </button>
-                                <button
-                                    className="btn btn-secondary"
-                                    style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--accent)', color: 'var(--accent)' }}
-                                    title="Transfer to teammate"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setTransferringLead(lead);
-                                    }}
-                                >
-                                    <UserPlus size={18} />
                                 </button>
                             </div>
                         </motion.div>

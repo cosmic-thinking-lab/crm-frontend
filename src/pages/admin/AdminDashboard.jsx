@@ -11,13 +11,13 @@ import LeadForm from '../../components/LeadForm';
 
 
 const productStyles = {
-    'School LMS': { icon: GraduationCap, color: '14, 165, 233' },
-    'Institute LMS': { icon: Building2, color: '139, 92, 246' },
-    'University LMS': { icon: University, color: '236, 72, 153' },
-    'SAAS': { icon: Cloud, color: '245, 158, 11' }
+    'School LMS': { icon: GraduationCap, color: '139, 92, 246' }, // Purple
+    'Institute LMS': { icon: Building2, color: '124, 58, 237' }, // Darker Purple
+    'University LMS': { icon: University, color: '167, 139, 250' }, // Lighter Purple
+    'SAAS': { icon: Cloud, color: '192, 132, 252' } // Violet
 };
 
-const defaultStyle = { icon: Folder, color: '34, 197, 94' };
+const defaultStyle = { icon: Folder, color: '139, 92, 246' };
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
@@ -139,8 +139,80 @@ const AdminDashboard = () => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingBottom: '60px'
+                paddingBottom: '60px',
+                width: '100%',
+                maxWidth: '1200px',
+                margin: '0 auto'
             }}>
+                {/* Global Stats Section */}
+                {!loading && stats && (
+                    <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+                        gap: '24px',
+                        width: '100%',
+                        marginBottom: '60px'
+                    }}>
+                        {[
+                            { title: 'Total Leads', value: stats.totals?.leads || 0, icon: Target, color: '139, 92, 246' },
+                            { title: 'Active Users', value: stats.totals?.bdas || 0, icon: Users, color: '124, 58, 237' },
+                            { title: 'Total Projects', value: projects.length, icon: Folder, color: '167, 139, 250' }
+                        ].map((s, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                                className="glass-card"
+                                style={{
+                                    padding: '28px 32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '24px',
+                                    background: `linear-gradient(135deg, rgba(${s.color}, 0.1) 0%, rgba(${s.color}, 0.02) 100%)`,
+                                    border: `1px solid rgba(${s.color}, 0.2)`,
+                                    borderRadius: '24px',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                                }}
+                            >
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '-20px',
+                                    right: '-20px',
+                                    width: '120px',
+                                    height: '120px',
+                                    background: `radial-gradient(circle, rgba(${s.color}, 0.15) 0%, transparent 70%)`,
+                                    filter: 'blur(20px)',
+                                    zIndex: 0
+                                }} />
+                                
+                                <div style={{
+                                    width: '60px',
+                                    height: '60px',
+                                    borderRadius: '18px',
+                                    background: `rgba(${s.color}, 0.15)`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: `rgb(${s.color})`,
+                                    border: `1px solid rgba(${s.color}, 0.25)`,
+                                    zIndex: 1,
+                                    boxShadow: `0 8px 20px rgba(${s.color}, 0.15)`
+                                }}>
+                                    <s.icon size={28} />
+                                </div>
+                                
+                                <div style={{ zIndex: 1 }}>
+                                    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '700', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.title}</p>
+                                    <h2 style={{ fontSize: '32px', fontWeight: '800', letterSpacing: '-0.03em', color: 'white' }}>{s.value || 0}</h2>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -235,118 +307,156 @@ const AdminDashboard = () => {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1, duration: 0.4 }}
-                                whileHover={{ y: -10, scale: 1.03 }}
-                                whileTap={{ scale: 0.98 }}
+                                whileHover={{ 
+                                    y: -12,
+                                    scale: 1.02,
+                                    transition: { duration: 0.2, ease: "easeOut" }
+                                }}
                                 className="glass-card"
                                 onClick={() => handleCardClick(card.name)}
                                 style={{
-                                    padding: '32px 24px',
+                                    padding: '44px 24px 28px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     textAlign: 'center',
-                                    gap: '20px',
-                                    background: card.gradient,
-                                    border: '1px solid var(--glass-border)',
+                                    gap: '24px',
+                                    background: `linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)`,
+                                    border: '1px solid rgba(255,255,255,0.08)',
                                     position: 'relative',
                                     overflow: 'hidden',
-                                    minHeight: '260px'
+                                    minHeight: '320px',
+                                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                                    borderRadius: '28px'
                                 }}
                             >
-                                {/* Background glow */}
+                                {/* Top Accent Glow Line */}
                                 <div style={{
                                     position: 'absolute',
-                                    top: '-40px',
-                                    right: '-40px',
-                                    width: '160px',
-                                    height: '160px',
-                                    background: `radial-gradient(circle, rgba(${card.color}, 0.15) 0%, transparent 70%)`,
-                                    zIndex: 0
-                                }} />
-                                <div style={{
-                                    position: 'absolute',
-                                    bottom: '-40px',
-                                    left: '-40px',
-                                    width: '120px',
-                                    height: '120px',
-                                    background: `radial-gradient(circle, rgba(${card.color}, 0.08) 0%, transparent 70%)`,
-                                    zIndex: 0
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: '3px',
+                                    background: `linear-gradient(90deg, transparent, rgb(${card.color}), transparent)`,
+                                    opacity: 0.6
                                 }} />
 
-                                {/* Icon */}
+                                {/* Floating Background Glows */}
                                 <div style={{
-                                    width: '72px',
-                                    height: '72px',
-                                    borderRadius: '20px',
-                                    background: `rgba(${card.color}, 0.12)`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: `rgb(${card.color})`,
-                                    boxShadow: `0 8px 24px rgba(${card.color}, 0.12)`,
-                                    zIndex: 1
-                                }}>
-                                    <Icon size={36} />
+                                    position: 'absolute',
+                                    top: '-10%',
+                                    right: '-10%',
+                                    width: '180px',
+                                    height: '180px',
+                                    background: `radial-gradient(circle, rgba(${card.color}, 0.15) 0%, transparent 70%)`,
+                                    zIndex: 0,
+                                    filter: 'blur(30px)'
+                                }} />
+
+                                {/* Icon Wrapper with Soft Glow */}
+                                <div style={{ position: 'relative', zIndex: 1, marginBottom: '8px' }}>
+                                    <div style={{
+                                        position: 'absolute',
+                                        inset: '-12px',
+                                        background: `rgba(${card.color}, 0.25)`,
+                                        borderRadius: '28px',
+                                        filter: 'blur(12px)',
+                                        opacity: 0.4
+                                    }} />
+                                    <div style={{
+                                        width: '84px',
+                                        height: '84px',
+                                        borderRadius: '24px',
+                                        background: `linear-gradient(135deg, rgba(${card.color}, 0.25), rgba(${card.color}, 0.05))`,
+                                        border: `1px solid rgba(${card.color}, 0.3)`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: `rgb(${card.color})`,
+                                        position: 'relative',
+                                        zIndex: 2,
+                                        boxShadow: `inset 0 0 25px rgba(${card.color}, 0.15)`
+                                    }}>
+                                        <Icon size={42} />
+                                    </div>
                                 </div>
 
-                                {/* Title */}
-                                <div style={{ zIndex: 1 }}>
+                                {/* Text Content */}
+                                <div style={{ zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     <h3 style={{
-                                        fontSize: '18px',
-                                        fontWeight: '700',
-                                        marginBottom: '8px',
-                                        letterSpacing: '-0.02em'
+                                        fontSize: '24px',
+                                        fontWeight: '800',
+                                        color: 'white',
+                                        letterSpacing: '-0.03em',
+                                        lineHeight: 1.2
                                     }}>
                                         {card.name}
                                     </h3>
                                     <p style={{
-                                        fontSize: '13px',
-                                        color: 'var(--text-muted)',
-                                        lineHeight: '1.5'
+                                        fontSize: '14px',
+                                        color: 'rgba(255,255,255,0.5)',
+                                        lineHeight: '1.6',
+                                        maxWidth: '220px',
+                                        margin: '0 auto'
                                     }}>
                                         {card.description}
                                     </p>
                                 </div>
 
-                                {/* Lead count and add button */}
+                                {/* Footer Stats and Quick Action */}
                                 <div style={{
                                     marginTop: 'auto',
                                     display: 'flex',
-                                    gap: '8px',
+                                    alignItems: 'center',
+                                    gap: '10px',
                                     width: '100%',
-                                    zIndex: 1
+                                    zIndex: 1,
+                                    paddingTop: '16px',
+                                    borderTop: '1px solid rgba(255,255,255,0.06)'
                                 }}>
                                     <div style={{
                                         flex: 1,
-                                        padding: '8px 16px',
-                                        borderRadius: '12px',
+                                        padding: '10px 14px',
+                                        borderRadius: '16px',
                                         background: `rgba(${card.color}, 0.08)`,
-                                        border: `1px solid rgba(${card.color}, 0.15)`,
-                                        fontSize: '13px',
-                                        fontWeight: '600',
+                                        border: `1px solid rgba(${card.color}, 0.12)`,
+                                        fontSize: '14px',
+                                        fontWeight: '700',
                                         color: `rgb(${card.color})`,
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center'
+                                        justifyContent: 'center',
+                                        gap: '6px'
                                     }}>
+                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: `rgb(${card.color})` }} />
                                         {leadCount} Leads
                                     </div>
-                                    <button 
+                                    <motion.button 
+                                        whileHover={{ scale: 1.1, rotate: 90 }}
+                                        whileTap={{ scale: 0.9 }}
                                         className="btn btn-primary"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setAddingLeadToProject(p);
                                         }}
                                         style={{
-                                            padding: '8px',
-                                            borderRadius: '12px',
-                                            boxShadow: `0 4px 12px rgba(${card.color}, 0.2)`
+                                            width: '46px',
+                                            height: '46px',
+                                            padding: 0,
+                                            borderRadius: '16px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: `linear-gradient(135deg, rgb(${card.color}), rgba(${card.color}, 0.8))`,
+                                            boxShadow: `0 8px 20px rgba(${card.color}, 0.3)`,
+                                            border: 'none',
+                                            cursor: 'pointer'
                                         }}
                                         title="Add Lead"
                                     >
-                                        <Plus size={18} />
-                                    </button>
+                                        <Plus size={22} color="white" />
+                                    </motion.button>
                                 </div>
                             </motion.div>
                         );

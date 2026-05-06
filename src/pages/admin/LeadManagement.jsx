@@ -13,7 +13,6 @@ import {
     Mail,
     Phone,
     BadgeAlert,
-    Trash2,
     UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -146,7 +145,7 @@ const LeadManagement = () => {
             case 'high':
             case 'urgent': return '#f43f5e';
             case 'medium': return '#f59e0b';
-            case 'low': return '#10b981';
+            case 'low': return '#c084fc';
             default: return '#94a3b8';
         }
     };
@@ -156,7 +155,7 @@ const LeadManagement = () => {
         switch (s) {
             case 'new': return '#0ea5e9';
             case 'contacted': return '#6366f1';
-            case 'qualified': return '#10b981';
+            case 'qualified': return '#a78bfa';
             case 'proposal_sent':
             case 'negotiation':
             case 'converted': return '#8b5cf6';
@@ -166,27 +165,16 @@ const LeadManagement = () => {
         }
     };
 
-    const handleDeleteLead = async (leadId) => {
-        if (!resolvedProject) return;
-        if (!window.confirm("Are you sure you want to delete this lead? This action cannot be undone.")) return;
 
-        try {
-            await API.delete(`/projects/${resolvedProject._id}/leads/${leadId}`);
-            fetchLeads(); // Refresh list
-        } catch (error) {
-            console.error("Failed to delete lead", error);
-            alert(error.response?.data?.message || "Failed to delete lead");
-        }
-    };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                    <h1 className="text-gradient" style={{ fontSize: '32px', marginBottom: '4px' }}>Lead Management</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Manage and track all customer inquiries</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+            <div className="stack-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ minWidth: '200px' }}>
+                    <h1 className="text-gradient" style={{ fontSize: 'clamp(24px, 5vw, 32px)', marginBottom: '4px' }}>Lead Management</h1>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Manage and track all customer inquiries</p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     {selectedLeadIds.length > 0 && (
                         <button 
                             className="btn btn-secondary" 
@@ -290,8 +278,11 @@ const LeadManagement = () => {
                     <option value="new">New</option>
                     <option value="contacted">Contacted</option>
                     <option value="qualified">Qualified</option>
+                    <option value="proposal_sent">Proposal Sent</option>
+                    <option value="negotiation">Negotiation</option>
                     <option value="converted">Converted</option>
                     <option value="lost">Lost</option>
+                    <option value="junk">Junk</option>
                 </select>
                 <select
                     className="input-field"
@@ -311,7 +302,8 @@ const LeadManagement = () => {
             </div>
 
             <div className="glass-card" style={{ overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                     <thead>
                         <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--glass-border)' }}>
                             <th style={{ padding: '16px 24px', width: '40px' }}>
@@ -421,26 +413,7 @@ const LeadManagement = () => {
                                             >
                                                 Update
                                             </button>
-                                            <button 
-                                                style={{ 
-                                                    background: 'none', 
-                                                    border: 'none', 
-                                                    color: '#ef4444', 
-                                                    cursor: 'pointer',
-                                                    padding: '6px',
-                                                    borderRadius: '8px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    transition: 'var(--transition)'
-                                                }}
-                                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
-                                                onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-                                                onClick={() => handleDeleteLead(lead._id)}
-                                                title="Delete Lead"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+
                                         </div>
                                     </td>
                                 </motion.tr>
@@ -448,6 +421,7 @@ const LeadManagement = () => {
                         </AnimatePresence>
                     </tbody>
                 </table>
+                </div>
 
                 <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)' }}>
                     <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>

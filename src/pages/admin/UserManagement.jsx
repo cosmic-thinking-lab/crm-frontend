@@ -10,7 +10,6 @@ import {
     ToggleRight,
     Mail,
     Edit2,
-    Trash2,
     Link as LinkIcon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -25,6 +24,7 @@ const UserManagement = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [formLoading, setFormLoading] = useState(false);
+    const [formError, setFormError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [projects, setProjects] = useState([]);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -70,12 +70,19 @@ const UserManagement = () => {
 
     const handleCreateUser = async (formData) => {
         setFormLoading(true);
+        setFormError(null);
         try {
             await API.post('/users', formData);
             setIsModalOpen(false);
             fetchUsers();
         } catch (error) {
-            console.error("Failed to create BDA account", error);
+            console.error("Failed to create user", error);
+            const errData = error.response?.data;
+            if (errData?.errors) {
+                setFormError(errData.errors.map(e => e.message).join(', '));
+            } else {
+                setFormError(errData?.message || 'Failed to create user. Please check all fields and try again.');
+            }
         } finally {
             setFormLoading(false);
         }
@@ -83,13 +90,20 @@ const UserManagement = () => {
 
     const handleUpdateUser = async (formData) => {
         setFormLoading(true);
+        setFormError(null);
         try {
             await API.patch(`/users/${selectedUser._id}`, formData);
             setIsModalOpen(false);
             setSelectedUser(null);
             fetchUsers();
         } catch (error) {
-            console.error("Failed to update BDA account", error);
+            console.error("Failed to update user", error);
+            const errData = error.response?.data;
+            if (errData?.errors) {
+                setFormError(errData.errors.map(e => e.message).join(', '));
+            } else {
+                setFormError(errData?.message || 'Failed to update user. Please check all fields and try again.');
+            }
         } finally {
             setFormLoading(false);
         }
@@ -103,6 +117,7 @@ const UserManagement = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setSelectedUser(null);
+        setFormError(null);
     };
 
     const toggleStatus = async (userId, currentStatus) => {
@@ -143,16 +158,7 @@ const UserManagement = () => {
         setIsAssignModalOpen(true);
     };
 
-    const deleteUser = async (userId) => {
-        if (window.confirm("Are you sure you want to remove this user from the system?")) {
-            try {
-                await API.delete(`/users/${userId}`);
-                fetchUsers(false);
-            } catch (error) {
-                console.error("Failed to delete user", error);
-            }
-        }
-    };
+
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -172,6 +178,23 @@ const UserManagement = () => {
                 onClose={closeModal}
                 title={selectedUser ? "Edit BDA Account" : "Create New BDA Account"}
             >
+                {formError && (
+                    <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '8px',
+                        padding: '12px 16px',
+                        marginBottom: '16px',
+                        color: '#f87171',
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px'
+                    }}>
+                        <span style={{ fontSize: '16px', lineHeight: '1.2' }}>⚠️</span>
+                        <span>{formError}</span>
+                    </div>
+                )}
                 <UserForm 
                     onSubmit={selectedUser ? handleUpdateUser : handleCreateUser} 
                     loading={formLoading} 
@@ -323,7 +346,7 @@ const UserManagement = () => {
                                                 System Admin
                                             </span>
                                         )}
-                                        <span style={{ fontSize: '12px', color: u.isActive !== false ? '#4ade80' : 'var(--text-muted)' }}>
+                                        <span style={{ fontSize: '12px', color: u.isActive !== false ? '#a78bfa' : 'var(--text-muted)' }}>
                                             {u.isActive !== false ? 'Active' : 'Disabled'}
                                         </span>
                                     </div>
@@ -343,14 +366,7 @@ const UserManagement = () => {
                                         >
                                             <Edit2 size={18} />
                                         </button>
-                                        {u.globalRole !== 'admin' && (
-                                            <button
-                                                onClick={() => deleteUser(u._id)}
-                                                style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        )}
+
                                     </div>
                                 </td>
                             </motion.tr>

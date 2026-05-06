@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
-import { Bell, Check, Trash2, Clock } from 'lucide-react';
+import { Bell, Check, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Notifications = ({ isOpen, onClose }) => {
@@ -34,14 +34,7 @@ const Notifications = ({ isOpen, onClose }) => {
         }
     };
 
-    const deleteNotification = async (id) => {
-        try {
-            await API.delete(`/common/notifications/${id}`);
-            fetchNotifications();
-        } catch (error) {
-            console.error("Failed to delete notification", error);
-        }
-    };
+
 
     if (!isOpen) return null;
 
@@ -124,12 +117,7 @@ const Notifications = ({ isOpen, onClose }) => {
                                             <Check size={14} />
                                         </button>
                                     )}
-                                    <button
-                                        onClick={() => deleteNotification(n._id)}
-                                        style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
+
                                 </div>
                             </motion.div>
                         ))}

@@ -66,10 +66,10 @@ const BDADashboard = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                <MiniStat title="My Total Leads" value={stats?.myLeads || 0} icon={Target} color="14, 165, 233" />
-                <MiniStat title="Today's Follow-ups" value={stats?.todayFollowUpsCount || 0} icon={Calendar} color="244, 63, 94" />
-                <MiniStat title="Conversions" value={stats?.myConversions || 0} icon={CheckCircle} color="16, 185, 129" />
-                <MiniStat title="Conversion Rate" value={stats?.conversionRate || '0%'} icon={TrendingUp} color="99, 102, 241" />
+                <MiniStat title="My Total Leads" value={stats?.myLeads || 0} icon={Target} color="139, 92, 246" />
+                <MiniStat title="Today's Follow-ups" value={stats?.todayFollowUpsCount || 0} icon={Calendar} color="124, 58, 237" />
+                <MiniStat title="Conversions" value={stats?.myConversions || 0} icon={CheckCircle} color="167, 139, 250" />
+                <MiniStat title="Conversion Rate" value={stats?.conversionRate || '0%'} icon={TrendingUp} color="192, 132, 252" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>

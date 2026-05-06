@@ -18,24 +18,55 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
     const [followUpDate, setFollowUpDate] = useState(lead.followUpDate ? new Date(lead.followUpDate).toISOString().split('T')[0] : '');
     const [assignedTo, setAssignedTo] = useState(lead.assignedTo?._id || lead.assignedTo || '');
     const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
     useEffect(() => {
-        if (isAdmin) {
-            const fetchUsers = async () => {
-                try {
-                    const { data } = await API.get('/users');
-                    setUsers((data.data || data || []).filter(u => u.isActive !== false));
-                } catch (err) {
-                    console.error('Failed to load team members');
+        const fetchUsers = async () => {
+            try {
+                const resolvedProjectId = projectId || lead.projectId?._id || lead.projectId || lead.project?._id;
+                
+                let endpoint = '/users';
+                if (resolvedProjectId) {
+                    endpoint = `/projects/${resolvedProjectId}/members`;
                 }
-            };
-            fetchUsers();
-        }
-    }, [isAdmin]);
+
+                const { data } = await API.get(endpoint);
+                const rawData = data.data || (Array.isArray(data) ? data : []);
+                
+                const processedUsers = resolvedProjectId 
+                    ? rawData.map(m => ({
+                        ...m.userId,
+                        projectRole: m.role
+                    })).filter(u => u._id) // Ensure we have a valid user object
+                    : rawData;
+
+                // Priority: Show BDAs. Fallback: Show all project members if no BDAs or if current assignee is a Manager.
+                const bdas = processedUsers.filter(u => u.projectRole === 'bda' && u.isActive !== false);
+                
+                // Always include the current assignee in the list so the dropdown doesn't reset
+                const currentId = lead.assignedTo?._id || lead.assignedTo;
+                const currentAssignee = processedUsers.find(u => u._id === currentId);
+                
+                let finalUsers = bdas;
+                if (currentAssignee && !bdas.find(u => u._id === currentId)) {
+                    finalUsers = [currentAssignee, ...bdas];
+                }
+                
+                // If still empty or if we want to allow assigning to anyone in project
+                if (finalUsers.length === 0 && processedUsers.length > 0) {
+                    finalUsers = processedUsers.filter(u => u.isActive !== false);
+                }
+
+                setUsers(finalUsers);
+            } catch (err) {
+                console.error('Failed to load team members', err);
+            }
+        };
+
+        fetchUsers();
+    }, [isAdmin, projectId, lead]);
 
     const handleUpdate = async (e) => {
         e.preventDefault();
@@ -52,20 +83,15 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
                 return;
             }
 
-            // Update lead with all changes at once - following Postman request format
             const updateData = {
                 status,
                 priority,
-                followUpDate
+                followUpDate,
+                assignedTo: assignedTo || null
             };
-
-            if (isAdmin) {
-                updateData.assignedTo = assignedTo || null;
-            }
 
             await API.patch(`/projects/${resolvedProjectId}/leads/${lead._id}`, updateData);
 
-            // Add Note if provided
             if (note.trim()) {
                 await API.post(`/projects/${resolvedProjectId}/leads/${lead._id}/notes`, { content: note });
             }
@@ -80,6 +106,9 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
             setSubmitting(false);
         }
     };
+
+    // Anyone using this modal (Admin or Manager) can assign leads if they are in this portal
+    const canAssign = true; 
 
     return (
         <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -125,7 +154,7 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
                     </select>
                 </div>
 
-                {isAdmin && (
+                {canAssign && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '14px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <UserPlus size={14} /> Assign To
@@ -143,7 +172,7 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
                     </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: isAdmin ? 'unset' : 'span 2' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: canAssign ? 'unset' : 'span 2' }}>
                     <label style={{ fontSize: '14px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <CalendarIcon size={14} /> Next Follow-up
                     </label>
@@ -184,7 +213,7 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    style={{ padding: '12px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    style={{ padding: '12px', borderRadius: '10px', background: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
                     <CheckCircle2 size={16} /> {success}
                 </motion.div>
@@ -204,6 +233,5 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
         </form>
     );
 };
-
 
 export default LeadActionModal;

@@ -63,6 +63,12 @@ const Layout = ({ children }) => {
         { icon: Users, label: 'Teams', path: '/admin/users' },
     ];
 
+    const managerMenu = [
+        { icon: LayoutDashboard, label: 'Overview', path: '/manager/overview' },
+        { icon: Target, label: 'Leads', path: '/manager/leads' },
+        { icon: Users, label: 'My Team', path: '/manager/team' },
+    ];
+
     const productMenu = currentLmsType ? [
         { 
             icon: LayoutDashboard, 
@@ -92,13 +98,13 @@ const Layout = ({ children }) => {
         { icon: Target, label: 'My Leads', path: '/bda/leads' },
     ];
 
-    const menu = productMenu || ((user?.role === 'Admin' || user?.role === 'Manager') ? adminMenu : bdaMenu);
+    const menu = productMenu || (user?.role === 'Admin' ? adminMenu : user?.role === 'Manager' ? managerMenu : bdaMenu);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'transparent' }}>
             {/* Sidebar */}
-            <aside className="glass-card" style={{
-                width: collapsed ? '80px' : 'var(--sidebar-width)',
+            <aside className={`glass-card sidebar ${!collapsed ? 'sidebar-expanded' : ''}`} style={{
+                width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
                 height: 'calc(100vh - 32px)',
                 margin: '16px',
                 borderRadius: '24px',
@@ -108,46 +114,70 @@ const Layout = ({ children }) => {
                 zIndex: 100,
                 position: 'fixed'
             }}>
-                <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                        minWidth: '32px',
-                        height: '32px',
-                        borderRadius: '8px',
-                        background: 'var(--primary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <Target size={20} color="white" />
+                <div style={{ padding: collapsed ? '24px 0' : '24px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                            minWidth: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            background: 'var(--primary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <Target size={20} color="white" />
+                        </div>
+                        {!collapsed && (
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontWeight: '800', fontSize: '18px', letterSpacing: '-0.5px' }}>COSMIC CRM</span>
+                                {currentLmsType && (
+                                    <span style={{ 
+                                        fontSize: '10px', 
+                                        color: 'var(--primary)', 
+                                        fontWeight: '700', 
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em',
+                                        marginTop: '-2px'
+                                    }}>
+                                        {currentLmsType}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                     {!collapsed && (
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontWeight: '800', fontSize: '18px', letterSpacing: '-0.5px' }}>COSMIC CRM</span>
-                            {currentLmsType && (
-                                <span style={{ 
-                                    fontSize: '10px', 
-                                    color: 'var(--primary)', 
-                                    fontWeight: '700', 
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    marginTop: '-2px'
-                                }}>
-                                    {currentLmsType}
-                                </span>
-                            )}
-                        </div>
+                        <button
+                            onClick={() => setCollapsed(!collapsed)}
+                            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        >
+                            <Menu size={20} />
+                        </button>
                     )}
                 </div>
+                {collapsed && (
+                    <button
+                        onClick={() => setCollapsed(!collapsed)}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', marginBottom: '12px', display: 'flex', justifyContent: 'center' }}
+                    >
+                        <Menu size={20} />
+                    </button>
+                )}
 
                 <nav style={{ flex: 1, marginTop: '12px' }}>
-                    {menu.map((item) => (
-                        <SidebarItem
-                            key={item.path}
-                            {...item}
-                            active={location.pathname === item.path}
-                            collapsed={collapsed}
-                        />
-                    ))}
+                    {menu.map((item) => {
+                        const [pathPart] = item.path.split('?');
+                        const isItemActive = location.pathname === pathPart && 
+                            (item.path.includes('?') ? location.search.includes(item.path.split('?')[1]) : true);
+                        
+                        return (
+                            <SidebarItem
+                                key={item.path}
+                                {...item}
+                                active={isItemActive}
+                                collapsed={collapsed}
+                            />
+                        );
+                    })}
                 </nav>
 
                 <div style={{ padding: collapsed ? '16px 0' : '16px', borderTop: '1px solid var(--glass-border)' }}>
@@ -177,28 +207,23 @@ const Layout = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <main style={{
+            <main className="main-content" style={{
                 flex: 1,
-                marginLeft: collapsed ? '112px' : 'calc(var(--sidebar-width) + 48px)',
+                marginLeft: collapsed ? 'calc(var(--sidebar-collapsed-width) + 24px)' : 'calc(var(--sidebar-width) + 48px)',
                 transition: 'margin-left 0.3s ease',
-                padding: '16px 32px 32px'
+                padding: '16px 32px 32px',
+                width: '100%',
+                minWidth: 0
             }}>
                 {/* Navbar */}
                 <header style={{
                     height: 'var(--nav-height)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
+                    justifyContent: 'flex-end',
                     marginBottom: '24px',
                     position: 'relative'
                 }}>
-                    <button
-                        onClick={() => setCollapsed(!collapsed)}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                    >
-                        <Menu size={24} />
-                    </button>
-
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <button
                             className="glass-card"

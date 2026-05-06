@@ -61,7 +61,7 @@ const StatCard = ({ title, value, icon: Icon, color, delay }) => (
                 <h2 style={{ fontSize: '32px', fontWeight: '800', letterSpacing: '-1px' }}>
                     {value || '0'}
                 </h2>
-                <span style={{ color: '#4ade80', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                <span style={{ color: '#a78bfa', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '2px' }}>
                     <ArrowUpRight size={14} />
                     Active
                 </span>
@@ -109,7 +109,7 @@ const Overview = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Real-time statistics across all products and teams</p>
                 </div>
                 <div className="glass-card" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-                    <Activity size={14} color="#4ade80" />
+                    <Activity size={14} color="#a78bfa" />
                     <span>System Live</span>
                 </div>
             </div>
@@ -120,28 +120,28 @@ const Overview = () => {
                     title="Total Projects" 
                     value={totals.projects} 
                     icon={Folder} 
-                    color="99, 102, 241" 
+                    color="139, 92, 246" 
                     delay={0.1}
                 />
                 <StatCard 
                     title="System Leads" 
                     value={totals.leads} 
                     icon={Target} 
-                    color="236, 72, 153" 
+                    color="167, 139, 250" 
                     delay={0.2}
                 />
                 <StatCard 
                     title="Team Members" 
                     value={totals.bdas} 
                     icon={Users} 
-                    color="139, 92, 246" 
+                    color="124, 58, 237" 
                     delay={0.3}
                 />
                 <StatCard 
                     title="Conversion Rate" 
                     value={totals.conversionRate} 
                     icon={TrendingUp} 
-                    color="45, 212, 191" 
+                    color="192, 132, 252" 
                     delay={0.4}
                 />
             </div>

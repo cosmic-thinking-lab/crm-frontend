@@ -10,7 +10,6 @@ import {
     Phone,
     Mail,
     Edit2,
-    Trash2,
     History,
     Send,
     Check,
@@ -119,16 +118,7 @@ const LeadDetail = ({ role }) => {
         }
     };
 
-    const handleDeleteLead = async () => {
-        if (!window.confirm("Are you sure you want to delete this lead? This action cannot be undone.")) return;
-        try {
-            await API.delete(`/projects/${projectId}/leads/${id}`);
-            navigate(-1);
-        } catch (error) {
-            console.error("Failed to delete lead", error);
-            alert(error.response?.data?.message || "Failed to delete lead");
-        }
-    };
+
 
     const addNote = async (e) => {
         e.preventDefault();
@@ -157,17 +147,7 @@ const LeadDetail = ({ role }) => {
         }
     };
 
-    const handleDeleteNote = async (noteId) => {
-        if (!window.confirm("Are you sure you want to delete this note? This action cannot be undone.")) return;
-        try {
-            await API.delete(`/projects/${projectId}/leads/${id}/notes/${noteId}`);
-            fetchNotes(); // Refresh list
-            fetchLeadData(); // Also refresh lead to update noteCount
-        } catch (error) {
-            console.error("Failed to delete note", error);
-            alert(error.response?.data?.message || "Failed to delete note");
-        }
-    };
+
 
     if (loading) return <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>Loading lead details...</div>;
     
@@ -285,7 +265,7 @@ const LeadDetail = ({ role }) => {
                     >
                         <h2 className="text-gradient" style={{ fontSize: '22px', marginBottom: '20px' }}>Update Lead Status</h2>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
-                            {['new', 'contacted', 'qualified', 'proposal_sent', 'negotiation', 'converted', 'lost'].map(status => (
+                            {['new', 'contacted', 'qualified', 'proposal_sent', 'negotiation', 'converted', 'lost', 'junk'].map(status => (
                                 <button 
                                     key={status}
                                     className={`btn ${lead.status === status ? 'btn-primary' : 'btn-secondary'}`}
@@ -318,9 +298,6 @@ const LeadDetail = ({ role }) => {
                     {(role === 'Admin' || role === 'Manager' || role === 'BDA') && (
                         <button className="btn btn-secondary" onClick={() => setIsEditing(true)}><Edit2 size={18} /> Edit</button>
                     )}
-                    {(role === 'Admin' || role === 'Manager') && (
-                        <button className="btn btn-secondary" style={{ color: 'var(--accent)' }} onClick={handleDeleteLead}><Trash2 size={18} /> Delete</button>
-                    )}
                 </div>
             </div>
 
@@ -331,7 +308,17 @@ const LeadDetail = ({ role }) => {
                         <h3 style={{ marginBottom: '20px', fontSize: '16px', fontWeight: '600' }}>Contact Information</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                                <div style={{ 
+                                    width: '36px', 
+                                    height: '36px', 
+                                    borderRadius: '10px', 
+                                    background: 'rgba(139, 92, 246, 0.05)', 
+                                    border: '1px solid rgba(139, 92, 246, 0.2)',
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    color: '#a78bfa' 
+                                }}>
                                     <div style={{ margin: 'auto' }}><Phone size={18} /></div>
                                 </div>
                                 <div>
@@ -340,7 +327,17 @@ const LeadDetail = ({ role }) => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--secondary)' }}>
+                                <div style={{ 
+                                    width: '36px', 
+                                    height: '36px', 
+                                    borderRadius: '10px', 
+                                    background: 'rgba(139, 92, 246, 0.05)', 
+                                    border: '1px solid rgba(139, 92, 246, 0.2)',
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    color: '#a78bfa' 
+                                }}>
                                     <div style={{ margin: 'auto' }}><Mail size={18} /></div>
                                 </div>
                                 <div>
@@ -436,12 +433,19 @@ const LeadDetail = ({ role }) => {
                             {notesLoading && notes.length === 0 ? (
                                 <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Loading notes...</p>
                             ) : notes.map((note, idx) => (
-                                <div key={note._id || idx} style={{ padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                                <div key={note._id || idx} style={{ 
+                                    padding: '16px', 
+                                    borderRadius: '16px', 
+                                    background: 'rgba(255,255,255,0.03)', 
+                                    border: '1px solid rgba(255,255,255,0.06)', 
+                                    position: 'relative',
+                                    transition: 'var(--transition)'
+                                }}>
                                     {editingNoteId === note._id ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                             <textarea
                                                 className="input-field"
-                                                style={{ minHeight: '60px', fontSize: '14px', resize: 'none' }}
+                                                style={{ minHeight: '80px', fontSize: '14px', resize: 'none', background: 'rgba(0,0,0,0.2)' }}
                                                 value={editingContent}
                                                 onChange={(e) => setEditingContent(e.target.value)}
                                                 autoFocus
@@ -449,57 +453,62 @@ const LeadDetail = ({ role }) => {
                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                 <button 
                                                     className="btn btn-secondary" 
-                                                    style={{ padding: '4px 8px', fontSize: '11px' }}
+                                                    style={{ padding: '6px 12px', fontSize: '12px' }}
                                                     onClick={() => setEditingNoteId(null)}
                                                 >
-                                                    <X size={14} /> Cancel
+                                                    Cancel
                                                 </button>
                                                 <button 
                                                     className="btn btn-primary" 
-                                                    style={{ padding: '4px 8px', fontSize: '11px' }}
+                                                    style={{ padding: '6px 12px', fontSize: '12px' }}
                                                     onClick={() => handleUpdateNote(note._id)}
                                                 >
-                                                    <Check size={14} /> Save
+                                                    Save Note
                                                 </button>
                                             </div>
                                         </div>
                                     ) : (
                                         <>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <p style={{ fontSize: '14px', marginBottom: '8px', lineHeight: '1.5', flex: 1 }}>{note.content}</p>
-                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ 
+                                                        width: '28px', 
+                                                        height: '28px', 
+                                                        borderRadius: '50%', 
+                                                        background: 'var(--primary-gradient)', 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        justifyContent: 'center', 
+                                                        fontSize: '11px', 
+                                                        color: 'white',
+                                                        fontWeight: '700',
+                                                        boxShadow: '0 4px 10px rgba(99, 102, 241, 0.2)'
+                                                    }}>
+                                                        {note.addedBy?.name?.charAt(0) || 'U'}
+                                                    </div>
+                                                    <div>
+                                                        <p style={{ fontSize: '13px', fontWeight: '700', color: 'white' }}>{note.addedBy?.name || 'User'}</p>
+                                                        <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(note.addedAt || note.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '4px' }}>
                                                     <button 
-                                                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.6 }}
+                                                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.5, padding: '4px' }}
                                                         onClick={() => {
                                                             setEditingNoteId(note._id);
                                                             setEditingContent(note.content);
                                                         }}
                                                         onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}
+                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = 0.5}
                                                         title="Edit Note"
                                                     >
                                                         <Edit2 size={14} />
                                                     </button>
-                                                    <button 
-                                                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', opacity: 0.6 }}
-                                                        onClick={() => handleDeleteNote(note._id)}
-                                                        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}
-                                                        title="Delete Note"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: 'white' }}>
-                                                        {note.addedBy?.name?.charAt(0) || 'U'}
-                                                    </div>
-                                                    <span>{note.addedBy?.name || 'User'}</span>
-                                                </div>
-                                                <span>{new Date(note.addedAt || note.createdAt).toLocaleString()}</span>
-                                            </div>
+                                            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                                                {note.content}
+                                            </p>
                                         </>
                                     )}
                                 </div>

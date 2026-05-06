@@ -139,7 +139,7 @@ const ImportLeadsModal = ({ onClose, onComplete, projectId }) => {
                     <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        style={{ width: '64px', height: '64px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}
+                        style={{ width: '64px', height: '64px', background: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}
                     >
                         <CheckCircle2 size={32} />
                     </motion.div>

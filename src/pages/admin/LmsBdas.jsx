@@ -11,7 +11,6 @@ import {
     Mail,
     ArrowLeft,
     Users,
-    Trash2,
     Edit2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -123,19 +122,7 @@ const LmsBdas = () => {
         setSelectedMember(null);
     };
 
-    const handleRemoveMember = async (memberId, e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (!window.confirm("Remove this user from the project team?")) return;
 
-        try {
-            await API.delete(`/projects/${project._id}/members/${memberId}`);
-            fetchProjectAndMembers(false);
-        } catch (error) {
-            console.error("Failed to remove member", error);
-        }
-    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -226,14 +213,7 @@ const LmsBdas = () => {
                                 {m.userId.name.charAt(0)}
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                    type="button"
-                                    onClick={(e) => handleRemoveMember(m._id, e)}
-                                    title="Remove from Project"
-                                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+
                                 <button
                                     type="button"
                                     onClick={(e) => {

@@ -51,7 +51,7 @@ const LmsBdaLeads = () => {
         switch (s) {
             case 'new': return '#0ea5e9';
             case 'contacted': return '#6366f1';
-            case 'qualified': return '#10b981';
+            case 'qualified': return '#a78bfa';
             case 'converted': return '#8b5cf6';
             case 'lost':
             case 'junk': return '#ef4444';
@@ -157,7 +157,7 @@ const LmsBdaLeads = () => {
                                                 width: '8px',
                                                 height: '8px',
                                                 borderRadius: '50%',
-                                                background: lead.priority?.toLowerCase() === 'high' || lead.priority?.toLowerCase() === 'urgent' ? '#f43f5e' : lead.priority?.toLowerCase() === 'medium' ? '#f59e0b' : '#10b981'
+                                                background: lead.priority?.toLowerCase() === 'high' || lead.priority?.toLowerCase() === 'urgent' ? '#f43f5e' : lead.priority?.toLowerCase() === 'medium' ? '#f59e0b' : '#a78bfa'
                                             }} />
                                             <span style={{ fontSize: '13px', textTransform: 'capitalize' }}>{lead.priority}</span>
                                         </div>

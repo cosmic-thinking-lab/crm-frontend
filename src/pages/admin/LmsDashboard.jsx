@@ -54,19 +54,22 @@ const LmsDashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [project, setProject] = useState(null);
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                // For now we use the main dashboard stats and filter on frontend
-                // In a real scenario, we might have /admin/dashboard?lmsType=...
-                const { data } = await API.get('/dashboard/global');
+                setLoading(true);
+                // 1. Get all projects to find the ID for the current lmsType
+                const { data: projectsRes } = await API.get('/projects');
+                const foundProject = projectsRes.data.find(p => p.name === lmsType);
                 
-                // Filtering leads and performance for this specific LMS
-                // Note: The backend doesn't yet support per-LMS aggregation in getDashboardStats
-                // so we show the general stats but labeled for this LMS, 
-                // or we could enhance the backend further.
-                setStats(data);
+                if (foundProject) {
+                    setProject(foundProject);
+                    // 2. Fetch project-specific stats
+                    const { data: statsRes } = await API.get(`/dashboard/projects/${foundProject._id}`);
+                    setStats(statsRes.data);
+                }
             } catch (error) {
                 console.error("Failed to fetch dashboard stats", error);
             } finally {
@@ -78,15 +81,10 @@ const LmsDashboard = () => {
 
     if (loading) return <div style={{ color: 'white', padding: '40px' }}>Loading {lmsType} Dashboard...</div>;
 
-    const COLORS = ['#0ea5e9', '#6366f1', '#f43f5e', '#10b981', '#f59e0b'];
+    const COLORS = ['#8b5cf6', '#a78bfa', '#c084fc', '#6366f1', '#7c3aed'];
 
-    // Get product specific lead count
-    const productCount = stats?.productLeads ? (
-        lmsType === 'School LMS' ? stats.productLeads.schoolLMS :
-        lmsType === 'Institute LMS' ? stats.productLeads.instituteLMS :
-        lmsType === 'University LMS' ? stats.productLeads.universityLMS :
-        lmsType === 'SAAS' ? stats.productLeads.saas : 0
-    ) : 0;
+    const productCount = stats?.totalLeads || 0;
+    const totalBdaCount = stats?.totalBdas || 0;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -105,9 +103,9 @@ const LmsDashboard = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                <StatCard title="Product Leads" value={productCount} icon={Target} color="14, 165, 233" />
-                <StatCard title="Active BDAs" value={stats?.bdaPerformance?.length || 0} icon={Users} color="99, 102, 241" />
-                <StatCard title="Conversion Rate" value="24.5%" icon={TrendingUp} color="16, 185, 129" />
+                <StatCard title="Product Leads" value={productCount} icon={Target} color="139, 92, 246" />
+                <StatCard title="Total BDAs" value={totalBdaCount} icon={Users} color="124, 58, 237" />
+                <StatCard title="Conversion Rate" value={stats?.conversionRate || '0%'} icon={TrendingUp} color="167, 139, 250" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
@@ -118,7 +116,11 @@ const LmsDashboard = () => {
                     </h3>
                     <div style={{ height: '300px', width: '100%' }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats?.bdaPerformance || []}>
+                            <BarChart data={stats?.bdaPerformance?.map(b => ({
+                                bdaName: b._id?.name || 'Unknown',
+                                totalLeads: b.total,
+                                convertedLeads: b.converted
+                            })) || []}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                 <XAxis dataKey="bdaName" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />

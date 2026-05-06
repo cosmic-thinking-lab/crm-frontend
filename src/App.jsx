@@ -47,6 +47,9 @@ import LmsBdas from './pages/admin/LmsBdas';
 import LmsBdaLeads from './pages/admin/LmsBdaLeads';
 import Overview from './pages/admin/Overview';
 import AddNotePage from './pages/bda/AddNotePage';
+import ManagerOverview from './pages/manager/ManagerOverview';
+import ManagerLeads from './pages/manager/ManagerLeads';
+import ManagerTeam from './pages/manager/ManagerTeam';
 
 function AppContent() {
   const { user } = useAuth();
@@ -58,16 +61,16 @@ function AppContent() {
       <Route path="/" element={
         <ProtectedRoute>
           <Layout>
-            {user?.role === 'Admin' || user?.role === 'Manager' ? <Navigate to="/admin/overview" /> : <Navigate to="/bda/dashboard" />}
+            {user?.role === 'Admin' ? <Navigate to="/admin/overview" /> : 
+             user?.role === 'Manager' ? <Navigate to="/manager/overview" /> : 
+             <Navigate to="/bda/dashboard" />}
           </Layout>
         </ProtectedRoute>
       } />
 
-
-
-      {/* Admin Routes with sidebar */}
+      {/* Admin Routes (Admin Only) */}
       <Route path="/admin/*" element={
-        <ProtectedRoute allowedRoles={['Admin', 'Manager']}>
+        <ProtectedRoute allowedRoles={['Admin']}>
           <Layout>
             <Routes>
               <Route path="overview" element={<Overview />} />
@@ -79,6 +82,20 @@ function AppContent() {
               <Route path="lms/:lmsType/dashboard" element={<LmsDashboard />} />
               <Route path="lms/:lmsType/bdas" element={<LmsBdas />} />
               <Route path="lms/:lmsType/bda/:bdaId/leads" element={<LmsBdaLeads />} />
+            </Routes>
+          </Layout>
+        </ProtectedRoute>
+      } />
+
+      {/* Manager Routes (Manager Only) */}
+      <Route path="/manager/*" element={
+        <ProtectedRoute allowedRoles={['Manager']}>
+          <Layout>
+            <Routes>
+              <Route path="overview" element={<ManagerOverview />} />
+              <Route path="leads" element={<ManagerLeads />} />
+              <Route path="team" element={<ManagerTeam />} />
+              <Route path="projects/:projectId/leads/:id" element={<LeadDetail role="Manager" />} />
             </Routes>
           </Layout>
         </ProtectedRoute>

@@ -48,7 +48,7 @@ const LeadAssignment = () => {
         switch (priority) {
             case 'High': return '#f43f5e';
             case 'Medium': return '#f59e0b';
-            case 'Low': return '#10b981';
+            case 'Low': return '#a78bfa';
             default: return '#94a3b8';
         }
     };
