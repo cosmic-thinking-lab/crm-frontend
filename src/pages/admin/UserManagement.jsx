@@ -29,6 +29,116 @@ const UserManagement = () => {
     const [projects, setProjects] = useState([]);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [assignmentData, setAssignmentData] = useState({ projectId: '', role: 'bda' });
+    const [userMemberships, setUserMemberships] = useState([]);
+    const [membershipLoading, setMembershipLoading] = useState(false);
+    const [membershipError, setMembershipError] = useState('');
+    const [membershipSuccess, setMembershipSuccess] = useState('');
+    const [editingMembership, setEditingMembership] = useState(null); // { memberId, projectId, currentRole }
+
+    const fetchUserMemberships = async (userId) => {
+        setMembershipLoading(true);
+        setMembershipError('');
+        try {
+            const { data } = await API.get(`/users/${userId}/memberships`);
+            setUserMemberships(data.data || []);
+        } catch {
+            // Fallback: build from user's projectMemberships already loaded
+            setUserMemberships([]);
+        } finally {
+            setMembershipLoading(false);
+        }
+    };
+
+    const handleAssignProject = async (e) => {
+        e.preventDefault();
+        setFormLoading(true);
+        setMembershipError('');
+        setMembershipSuccess('');
+        try {
+            await API.post(`/projects/${assignmentData.projectId}/members`, {
+                userId: selectedUser._id,
+                role: assignmentData.role
+            });
+            setMembershipSuccess('User added to project successfully!');
+            setAssignmentData({ projectId: '', role: 'bda' });
+            fetchUsers(false);
+            // Refresh memberships panel
+            await loadMembershipsForUser(selectedUser._id);
+        } catch (error) {
+            setMembershipError(error.response?.data?.message || 'Failed to assign project');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleUpdateMembership = async (memberId, projectId, newRole) => {
+        setMembershipError('');
+        setMembershipSuccess('');
+        try {
+            await API.patch(`/projects/${projectId}/members/${memberId}`, { role: newRole });
+            setMembershipSuccess('Role updated successfully!');
+            setEditingMembership(null);
+            fetchUsers(false);
+            await loadMembershipsForUser(selectedUser._id);
+        } catch (error) {
+            setMembershipError(error.response?.data?.message || 'Failed to update role');
+        }
+    };
+
+    const handleRemoveMembership = async (memberId, projectId) => {
+        if (!window.confirm('Remove this user from the project?')) return;
+        setMembershipError('');
+        setMembershipSuccess('');
+        try {
+            await API.delete(`/projects/${projectId}/members/${memberId}`);
+            setMembershipSuccess('Removed from project.');
+            fetchUsers(false);
+            await loadMembershipsForUser(selectedUser._id);
+        } catch (error) {
+            setMembershipError(error.response?.data?.message || 'Failed to remove from project');
+        }
+    };
+
+    const loadMembershipsForUser = async (userId) => {
+        setMembershipLoading(true);
+        try {
+            // Fetch all projects and filter those where this user is a member
+            const { data: projectsData } = await API.get('/projects');
+            const allProjects = projectsData.data || [];
+            const memberships = [];
+            for (const project of allProjects) {
+                try {
+                    const { data: memberData } = await API.get(`/projects/${project._id}/members`);
+                    const members = memberData.data || [];
+                    const match = members.find(m => m.userId?._id === userId || m.userId === userId);
+                    if (match) {
+                        memberships.push({
+                            memberId: match._id,
+                            projectId: project._id,
+                            projectName: project.name,
+                            role: match.role
+                        });
+                    }
+                } catch { /* skip projects we can't access */ }
+            }
+            setUserMemberships(memberships);
+        } finally {
+            setMembershipLoading(false);
+        }
+    };
+
+    const openAssignModal = async (e, user) => {
+        e.stopPropagation();
+        setSelectedUser(user);
+        setMembershipError('');
+        setMembershipSuccess('');
+        setAssignmentData({ projectId: '', role: 'bda' });
+        setEditingMembership(null);
+        setIsAssignModalOpen(true);
+        await loadMembershipsForUser(user._id);
+    };
+
+
 
     const fetchProjects = async () => {
         try {
@@ -133,32 +243,6 @@ const UserManagement = () => {
         }
     };
 
-    const handleAssignProject = async (e) => {
-        e.preventDefault();
-        setFormLoading(true);
-        try {
-            await API.post(`/projects/${assignmentData.projectId}/members`, {
-                userId: selectedUser._id,
-                role: assignmentData.role
-            });
-            setIsAssignModalOpen(false);
-            setSelectedUser(null);
-            alert("User assigned to project successfully!");
-        } catch (error) {
-            console.error("Failed to assign project", error);
-            alert(error.response?.data?.message || "Failed to assign project");
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const openAssignModal = (e, user) => {
-        e.stopPropagation();
-        setSelectedUser(user);
-        setIsAssignModalOpen(true);
-    };
-
-
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -205,42 +289,132 @@ const UserManagement = () => {
 
             <Modal
                 isOpen={isAssignModalOpen}
-                onClose={() => { setIsAssignModalOpen(false); setSelectedUser(null); }}
-                title={`Assign ${selectedUser?.name} to Project`}
+                onClose={() => { setIsAssignModalOpen(false); setSelectedUser(null); setUserMemberships([]); setMembershipError(''); setMembershipSuccess(''); }}
+                title={`Manage Projects — ${selectedUser?.name}`}
             >
-                <form onSubmit={handleAssignProject} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Select Project</label>
-                        <select 
-                            className="input-field" 
-                            style={{ background: 'var(--bg-dark)' }}
-                            value={assignmentData.projectId}
-                            onChange={(e) => setAssignmentData({ ...assignmentData, projectId: e.target.value })}
-                            required
-                        >
-                            <option value="">Choose a project...</option>
-                            {projects.map(p => (
-                                <option key={p._id} value={p._id}>{p.name}</option>
-                            ))}
-                        </select>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    
+                    {/* Feedback messages */}
+                    {membershipError && (
+                        <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            ⚠️ {membershipError}
+                        </div>
+                    )}
+                    {membershipSuccess && (
+                        <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#a78bfa', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            ✓ {membershipSuccess}
+                        </div>
+                    )}
+
+                    {/* Current Memberships */}
+                    <div>
+                        <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+                            Current Project Assignments
+                        </h3>
+                        {membershipLoading ? (
+                            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>Loading memberships...</div>
+                        ) : userMemberships.length === 0 ? (
+                            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
+                                No project assignments yet
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {userMemberships.map((m) => (
+                                    <div key={m.memberId} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: '600', fontSize: '14px' }}>{m.projectName}</div>
+                                        </div>
+                                        {editingMembership?.memberId === m.memberId ? (
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                <select
+                                                    className="input-field"
+                                                    style={{ padding: '6px 12px', fontSize: '13px', minWidth: '140px' }}
+                                                    defaultValue={m.role}
+                                                    id={`role-select-${m.memberId}`}
+                                                >
+                                                    <option value="bda">BDA</option>
+                                                    <option value="manager">Manager</option>
+                                                </select>
+                                                <button
+                                                    className="btn btn-primary"
+                                                    style={{ padding: '6px 14px', fontSize: '13px' }}
+                                                    onClick={() => {
+                                                        const sel = document.getElementById(`role-select-${m.memberId}`);
+                                                        handleUpdateMembership(m.memberId, m.projectId, sel.value);
+                                                    }}
+                                                >Save</button>
+                                                <button
+                                                    className="btn btn-secondary"
+                                                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                                                    onClick={() => setEditingMembership(null)}
+                                                >✕</button>
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                <span className={`badge badge-${m.role === 'manager' ? 'primary' : 'success'}`} style={{ textTransform: 'capitalize' }}>{m.role}</span>
+                                                <button
+                                                    title="Edit role"
+                                                    onClick={() => setEditingMembership({ memberId: m.memberId, projectId: m.projectId })}
+                                                    style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '4px' }}
+                                                >
+                                                    <Edit2 size={15} />
+                                                </button>
+                                                <button
+                                                    title="Remove from project"
+                                                    onClick={() => handleRemoveMembership(m.memberId, m.projectId)}
+                                                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '4px' }}
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Assign Role</label>
-                        <select 
-                            className="input-field" 
-                            style={{ background: 'var(--bg-dark)' }}
-                            value={assignmentData.role}
-                            onChange={(e) => setAssignmentData({ ...assignmentData, role: e.target.value })}
-                            required
-                        >
-                            <option value="bda">BDA (Team Member)</option>
-                            <option value="manager">Project Manager</option>
-                        </select>
+
+                    {/* Divider */}
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
+
+                    {/* Add to new project */}
+                    <div>
+                        <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+                            Add to Another Project
+                        </h3>
+                        <form onSubmit={handleAssignProject} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <select
+                                    className="input-field"
+                                    style={{ flex: 2 }}
+                                    value={assignmentData.projectId}
+                                    onChange={(e) => setAssignmentData({ ...assignmentData, projectId: e.target.value })}
+                                    required
+                                >
+                                    <option value="">Choose a project...</option>
+                                    {projects
+                                        .filter(p => !userMemberships.find(m => m.projectId === p._id))
+                                        .map(p => (
+                                            <option key={p._id} value={p._id}>{p.name}</option>
+                                        ))
+                                    }
+                                </select>
+                                <select
+                                    className="input-field"
+                                    style={{ flex: 1 }}
+                                    value={assignmentData.role}
+                                    onChange={(e) => setAssignmentData({ ...assignmentData, role: e.target.value })}
+                                >
+                                    <option value="bda">BDA</option>
+                                    <option value="manager">Manager</option>
+                                </select>
+                            </div>
+                            <button className="btn btn-primary" type="submit" disabled={formLoading} style={{ justifyContent: 'center' }}>
+                                {formLoading ? 'Assigning...' : '+ Add to Project'}
+                            </button>
+                        </form>
                     </div>
-                    <button className="btn btn-primary" type="submit" disabled={formLoading} style={{ justifyContent: 'center', marginTop: '12px' }}>
-                        {formLoading ? 'Assigning...' : 'Confirm Assignment'}
-                    </button>
-                </form>
+                </div>
             </Modal>
 
 

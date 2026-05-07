@@ -30,57 +30,140 @@ const LoginPage = () => {
             alignItems: 'center',
             justifyContent: 'center',
             minHeight: '100vh',
-            padding: '20px'
+            padding: '20px',
+            background: 'radial-gradient(circle at top right, rgba(139, 92, 246, 0.15), transparent), radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.15), transparent), var(--bg-darker)',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
+            {/* Animated Background Elements */}
+            <motion.div 
+                animate={{ 
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.5, 0.3],
+                }}
+                transition={{ duration: 8, repeat: Infinity }}
+                style={{
+                    position: 'absolute',
+                    top: '10%',
+                    right: '15%',
+                    width: '300px',
+                    height: '300px',
+                    background: 'var(--primary)',
+                    filter: 'blur(100px)',
+                    borderRadius: '50%',
+                    zIndex: 0
+                }}
+            />
+            <motion.div 
+                animate={{ 
+                    scale: [1, 1.3, 1],
+                    opacity: [0.2, 0.4, 0.2],
+                }}
+                transition={{ duration: 10, repeat: Infinity, delay: 1 }}
+                style={{
+                    position: 'absolute',
+                    bottom: '10%',
+                    left: '10%',
+                    width: '250px',
+                    height: '250px',
+                    background: 'var(--secondary)',
+                    filter: 'blur(80px)',
+                    borderRadius: '50%',
+                    zIndex: 0
+                }}
+            />
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
                 className="glass-card"
                 style={{
                     width: '100%',
-                    maxWdith: '400px',
-                    padding: '40px',
-                    borderWidth: '1px'
+                    maxWidth: '440px',
+                    padding: '48px',
+                    position: 'relative',
+                    zIndex: 1,
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
                 }}
             >
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <div style={{
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '16px',
-                        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto 16px',
-                        boxShadow: '0 8px 16px rgba(14, 165, 233, 0.4)'
+                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                    <motion.div 
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.2, type: "spring" }}
+                        style={{
+                            width: '72px',
+                            height: '72px',
+                            borderRadius: '20px',
+                            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 24px',
+                            boxShadow: '0 0 30px rgba(139, 92, 246, 0.4)',
+                            position: 'relative'
+                        }}
+                    >
+                        <div style={{
+                            position: 'absolute',
+                            inset: '-4px',
+                            borderRadius: '24px',
+                            border: '2px solid rgba(139, 92, 246, 0.3)',
+                            animation: 'pulse 2s infinite'
+                        }} />
+                        <LogIn size={36} color="white" />
+                    </motion.div>
+                    
+                    <h1 className="text-gradient" style={{ 
+                        fontSize: '32px', 
+                        fontWeight: '800', 
+                        marginBottom: '12px',
+                        letterSpacing: '-0.5px'
                     }}>
-                        <LogIn size={32} color="white" />
-                    </div>
-                    <h1 className="text-gradient" style={{ fontSize: '28px', marginBottom: '8px' }}>Welcome Back</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Enter your credentials to access CRM</p>
+                        Cosmic Tech CRM
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '15px' }}>
+                        Empowering your business reach
+                    </p>
                 </div>
 
                 {error && (
-                    <div style={{
-                        padding: '12px',
-                        borderRadius: '8px',
-                        background: 'rgba(244, 63, 94, 0.1)',
-                        border: '1px solid var(--accent)',
-                        color: '#fb7185',
-                        fontSize: '14px',
-                        marginBottom: '20px'
-                    }}>
-                        {error}
-                    </div>
+                    <motion.div 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        style={{
+                            padding: '14px',
+                            borderRadius: '12px',
+                            background: 'rgba(244, 63, 94, 0.1)',
+                            border: '1px solid rgba(244, 63, 94, 0.2)',
+                            color: '#fb7185',
+                            fontSize: '14px',
+                            marginBottom: '28px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px'
+                        }}
+                    >
+                        <span style={{ fontSize: '18px' }}>⚠️</span> {error}
+                    </motion.div>
                 )}
 
-                <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: 'var(--text-muted)' }}>Email Address</label>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', marginLeft: '4px' }}>
+                            Email Address
+                        </label>
                         <div style={{ position: 'relative' }}>
-                            <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <Mail size={18} style={{ 
+                                position: 'absolute', 
+                                left: '16px', 
+                                top: '50%', 
+                                transform: 'translateY(-50%)', 
+                                color: 'rgba(255,255,255,0.3)' 
+                            }} />
                             <input
                                 type="email"
                                 className="input-field"
@@ -88,15 +171,28 @@ const LoginPage = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                style={{ paddingLeft: '44px' }}
+                                style={{ 
+                                    paddingLeft: '48px',
+                                    height: '52px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    borderRadius: '14px'
+                                }}
                             />
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: 'var(--text-muted)' }}>Password</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', marginLeft: '4px' }}>
+                            Password
+                        </label>
                         <div style={{ position: 'relative' }}>
-                            <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <Lock size={18} style={{ 
+                                position: 'absolute', 
+                                left: '16px', 
+                                top: '50%', 
+                                transform: 'translateY(-50%)', 
+                                color: 'rgba(255,255,255,0.3)' 
+                            }} />
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 className="input-field"
@@ -104,20 +200,26 @@ const LoginPage = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                style={{ paddingLeft: '44px' }}
+                                style={{ 
+                                    paddingLeft: '48px',
+                                    height: '52px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    borderRadius: '14px'
+                                }}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                                 style={{
                                     position: 'absolute',
-                                    right: '14px',
+                                    right: '16px',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     background: 'none',
                                     border: 'none',
-                                    color: 'var(--text-muted)',
-                                    cursor: 'pointer'
+                                    color: 'rgba(255,255,255,0.3)',
+                                    cursor: 'pointer',
+                                    padding: '4px'
                                 }}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -125,18 +227,40 @@ const LoginPage = () => {
                         </div>
                     </div>
 
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <a href="#" style={{ fontSize: '13px', color: 'var(--primary)', textDecoration: 'none', fontWeight: '500' }}>
+                            Forgot password?
+                        </a>
+                    </div>
+
                     <button
                         type="submit"
                         className="btn btn-primary"
                         disabled={loading}
-                        style={{ width: '100%', justifyContent: 'center', py: '14px' }}
+                        style={{ 
+                            width: '100%', 
+                            height: '52px',
+                            justifyContent: 'center', 
+                            fontSize: '16px', 
+                            fontWeight: '700',
+                            borderRadius: '14px',
+                            marginTop: '8px',
+                            boxShadow: '0 10px 20px -5px rgba(139, 92, 246, 0.4)'
+                        }}
                     >
                         {loading ? 'Authenticating...' : 'Sign In'}
                     </button>
                 </form>
 
-                <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                    <a href="#" style={{ fontSize: '14px', color: 'var(--primary)', textDecoration: 'none' }}>Forgot password?</a>
+                <div style={{ 
+                    marginTop: '40px', 
+                    paddingTop: '24px', 
+                    borderTop: '1px solid rgba(255,255,255,0.05)', 
+                    textAlign: 'center' 
+                }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+                        Secure login for authorized personnel only
+                    </p>
                 </div>
             </motion.div>
         </div>
