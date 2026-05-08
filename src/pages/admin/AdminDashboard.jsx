@@ -315,18 +315,18 @@ const AdminDashboard = () => {
                                 className="glass-card"
                                 onClick={() => handleCardClick(card.name)}
                                 style={{
-                                    padding: '44px 24px 28px',
+                                    padding: '16px 20px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     textAlign: 'center',
-                                    gap: '24px',
+                                    gap: '12px',
                                     background: `linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)`,
                                     border: '1px solid rgba(255,255,255,0.08)',
                                     position: 'relative',
                                     overflow: 'hidden',
-                                    minHeight: '320px',
+                                    minHeight: '200px',
                                     boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
                                     borderRadius: '28px'
                                 }}
@@ -355,7 +355,7 @@ const AdminDashboard = () => {
                                 }} />
 
                                 {/* Icon Wrapper with Soft Glow */}
-                                <div style={{ position: 'relative', zIndex: 1, marginBottom: '8px' }}>
+                                <div style={{ position: 'relative', zIndex: 1, marginBottom: '0px' }}>
                                     <div style={{
                                         position: 'absolute',
                                         inset: '-12px',
@@ -365,8 +365,8 @@ const AdminDashboard = () => {
                                         opacity: 0.4
                                     }} />
                                     <div style={{
-                                        width: '84px',
-                                        height: '84px',
+                                        width: '48px',
+                                        height: '48px',
                                         borderRadius: '24px',
                                         background: `linear-gradient(135deg, rgba(${card.color}, 0.25), rgba(${card.color}, 0.05))`,
                                         border: `1px solid rgba(${card.color}, 0.3)`,
@@ -378,14 +378,14 @@ const AdminDashboard = () => {
                                         zIndex: 2,
                                         boxShadow: `inset 0 0 25px rgba(${card.color}, 0.15)`
                                     }}>
-                                        <Icon size={42} />
+                                        <Icon size={24} />
                                     </div>
                                 </div>
 
                                 {/* Text Content */}
-                                <div style={{ zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <div style={{ zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     <h3 style={{
-                                        fontSize: '24px',
+                                        fontSize: '18px',
                                         fontWeight: '800',
                                         color: 'white',
                                         letterSpacing: '-0.03em',
@@ -394,10 +394,10 @@ const AdminDashboard = () => {
                                         {card.name}
                                     </h3>
                                     <p style={{
-                                        fontSize: '14px',
-                                        color: 'rgba(255,255,255,0.5)',
-                                        lineHeight: '1.6',
-                                        maxWidth: '220px',
+                                        fontSize: '13px',
+                                        color: 'rgba(255,255,255,0.4)',
+                                        lineHeight: '1.4',
+                                        maxWidth: '200px',
                                         margin: '0 auto'
                                     }}>
                                         {card.description}
@@ -412,7 +412,7 @@ const AdminDashboard = () => {
                                     gap: '10px',
                                     width: '100%',
                                     zIndex: 1,
-                                    paddingTop: '16px',
+                                    paddingTop: '8px',
                                     borderTop: '1px solid rgba(255,255,255,0.06)'
                                 }}>
                                     <div style={{
