@@ -101,18 +101,23 @@ const Layout = ({ children }) => {
     const menu = productMenu || (user?.role === 'Admin' ? adminMenu : user?.role === 'Manager' ? managerMenu : bdaMenu);
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'transparent' }}>
+        <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', background: 'transparent' }}>
             {/* Sidebar */}
             <aside className={`glass-card sidebar ${!collapsed ? 'sidebar-expanded' : ''}`} style={{
                 width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
-                height: 'calc(100vh - 32px)',
-                margin: '16px',
-                borderRadius: '24px',
+                height: '100%',
+                margin: '0',
+                borderRadius: '0',
                 display: 'flex',
                 flexDirection: 'column',
+                flexShrink: 0,
                 transition: 'width 0.3s ease',
                 zIndex: 100,
-                position: 'fixed'
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                overflow: 'hidden'
             }}>
                 <div style={{ padding: collapsed ? '24px 0' : '24px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -209,11 +214,14 @@ const Layout = ({ children }) => {
             {/* Main Content */}
             <main className="main-content" style={{
                 flex: 1,
-                marginLeft: collapsed ? 'calc(var(--sidebar-collapsed-width) + 24px)' : 'calc(var(--sidebar-width) + 48px)',
+                marginLeft: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
                 transition: 'margin-left 0.3s ease',
                 padding: '16px 32px 32px',
                 width: '100%',
-                minWidth: 0
+                minWidth: 0,
+                height: '100%',
+                overflowY: 'auto',
+                overflowX: 'hidden'
             }}>
                 {/* Navbar */}
                 <header style={{

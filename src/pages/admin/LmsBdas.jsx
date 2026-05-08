@@ -67,7 +67,7 @@ const LmsBdas = () => {
             // Then assign them to the current project
             await API.post(`/projects/${project._id}/members`, {
                 userId: newUser._id,
-                role: formData.role || 'bda'
+                role: formData.globalRole || 'bda'
             });
 
             setIsModalOpen(false);
@@ -85,16 +85,16 @@ const LmsBdas = () => {
         console.log("Updating user:", selectedMember.userId._id, formData);
         setFormLoading(true);
         try {
-            // Update user profile
+            // Update user profile (strip globalRole - handled separately via project member)
             const profileUpdate = { ...formData };
-            delete profileUpdate.role; // Don't send role to global user API
+            delete profileUpdate.globalRole;
             
             await API.patch(`/users/${selectedMember.userId._id}`, profileUpdate);
             
             // Update project member role if it changed
-            if (formData.role && formData.role !== selectedMember.role) {
+            if (formData.globalRole && formData.globalRole !== selectedMember.role) {
                 await API.patch(`/projects/${project._id}/members/${selectedMember._id}`, {
-                    role: formData.role
+                    role: formData.globalRole
                 });
             }
 
@@ -162,7 +162,7 @@ const LmsBdas = () => {
                 <UserForm 
                     onSubmit={selectedMember ? handleUpdateUser : handleCreateUser} 
                     loading={formLoading} 
-                    initialData={selectedMember ? { ...selectedMember.userId, role: selectedMember.role } : null}
+                    initialData={selectedMember ? { ...selectedMember.userId, globalRole: selectedMember.role } : null}
                     showRole={true}
                 />
             </Modal>
