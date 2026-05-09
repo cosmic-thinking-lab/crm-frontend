@@ -175,7 +175,8 @@ const LoginPage = () => {
                                     paddingLeft: '48px',
                                     height: '52px',
                                     background: 'rgba(255,255,255,0.03)',
-                                    borderRadius: '14px'
+                                    borderRadius: '14px',
+                                    color: 'var(--text-main)'
                                 }}
                             />
                         </div>
@@ -202,9 +203,11 @@ const LoginPage = () => {
                                 required
                                 style={{ 
                                     paddingLeft: '48px',
+                                    paddingRight: '48px',
                                     height: '52px',
                                     background: 'rgba(255,255,255,0.03)',
-                                    borderRadius: '14px'
+                                    borderRadius: '14px',
+                                    color: 'var(--text-main)'
                                 }}
                             />
                             <button
