@@ -15,11 +15,18 @@ const AssignLeadModal = ({ lead, leads, onClose, onComplete, projectId }) => {
 
     useEffect(() => {
         const fetchUsers = async () => {
+            if (!projectId) {
+                setError('Project ID is required to load team members');
+                setLoading(false);
+                return;
+            }
             try {
-                const { data } = await API.get('/users');
-                // Only show active team members (v2.0 uses data.data)
-                const activeUsers = (data.data || data || []).filter(u => u.isActive !== false);
-                setUsers(activeUsers);
+                const { data } = await API.get(`/projects/${projectId}/members`);
+                // Only show active BDA members of this project
+                const activeMembers = (data.data || []).filter(
+                    m => m.userId?.isActive !== false && m.role === 'bda'
+                );
+                setUsers(activeMembers.map(m => m.userId));
             } catch (err) {
                 setError('Failed to load team members');
             } finally {
@@ -27,7 +34,7 @@ const AssignLeadModal = ({ lead, leads, onClose, onComplete, projectId }) => {
             }
         };
         fetchUsers();
-    }, []);
+    }, [projectId]);
 
     const handleAssign = async () => {
         if (!selectedUser || leadIds.length === 0 || !projectId) {

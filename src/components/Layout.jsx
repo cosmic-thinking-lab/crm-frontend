@@ -28,7 +28,7 @@ const SidebarItem = ({ icon: Icon, label, path, active, collapsed }) => (
             padding: '12px 16px',
             margin: '4px 12px',
             borderRadius: '12px',
-            color: active ? 'white' : 'var(--text-muted)',
+            color: active ? 'white' : 'rgba(255, 255, 255, 0.75)',
             background: active ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'transparent',
             textDecoration: 'none',
             gap: '12px',
@@ -134,7 +134,7 @@ const Layout = ({ children }) => {
                         </div>
                         {!collapsed && (
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontWeight: '800', fontSize: '18px', letterSpacing: '-0.5px' }}>COSMIC CRM</span>
+                                <span style={{ fontWeight: '800', fontSize: '18px', letterSpacing: '-0.5px', color: 'white' }}>COSMIC CRM</span>
                                 {currentLmsType && (
                                     <span style={{ 
                                         fontSize: '10px', 

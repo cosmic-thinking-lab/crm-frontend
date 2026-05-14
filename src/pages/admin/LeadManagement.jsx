@@ -310,10 +310,10 @@ const LeadManagement = () => {
                                 <input 
                                     type="checkbox" 
                                     style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                                    checked={leads.length > 0 && selectedLeadIds.length === leads.length}
+                                    checked={leads.length > 0 && selectedLeadIds.length === leads.filter(l => !l.assignedTo).length && leads.some(l => !l.assignedTo)}
                                     onChange={(e) => {
                                         if (e.target.checked) {
-                                            setSelectedLeadIds(leads.map(l => l._id));
+                                            setSelectedLeadIds(leads.filter(l => !l.assignedTo).map(l => l._id));
                                         } else {
                                             setSelectedLeadIds([]);
                                         }
@@ -323,6 +323,7 @@ const LeadManagement = () => {
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>LEAD NAME</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>STATUS</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>PRIORITY</th>
+                            <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>ASSIGNED TO</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>DATE ADDED</th>
                             <th style={{ padding: '16px 24px', color: 'var(--text-muted)', fontWeight: '600', fontSize: '14px' }}>ACTIONS</th>
                         </tr>
@@ -349,8 +350,10 @@ const LeadManagement = () => {
                                     <td style={{ padding: '16px 24px' }}>
                                         <input 
                                             type="checkbox" 
-                                            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                                            style={{ width: '16px', height: '16px', cursor: lead.assignedTo ? 'not-allowed' : 'pointer', opacity: lead.assignedTo ? 0.4 : 1 }}
                                             checked={selectedLeadIds.includes(lead._id)}
+                                            disabled={!!lead.assignedTo}
+                                            title={lead.assignedTo ? 'Already assigned' : 'Select to assign'}
                                             onChange={(e) => {
                                                 if (e.target.checked) {
                                                     setSelectedLeadIds([...selectedLeadIds, lead._id]);
@@ -400,6 +403,29 @@ const LeadManagement = () => {
                                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getPriorityColor(lead.priority) }} />
                                             <span style={{ fontSize: '13px', textTransform: 'capitalize' }}>{lead.priority}</span>
                                         </div>
+                                    </td>
+                                    <td style={{ padding: '16px 24px' }}>
+                                        {lead.assignedTo ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <div style={{
+                                                    width: '26px', height: '26px', borderRadius: '50%',
+                                                    background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: '11px', fontWeight: '700', color: 'white', flexShrink: 0
+                                                }}>
+                                                    {lead.assignedTo?.name?.charAt(0)}
+                                                </div>
+                                                <span style={{ fontSize: '13px', fontWeight: '500' }}>{lead.assignedTo?.name}</span>
+                                            </div>
+                                        ) : (
+                                            <span style={{
+                                                padding: '3px 8px', borderRadius: '6px', fontSize: '11px',
+                                                fontWeight: '600', background: 'rgba(148,163,184,0.1)',
+                                                color: 'var(--text-muted)', border: '1px solid var(--glass-border)'
+                                            }}>
+                                                Unassigned
+                                            </span>
+                                        )}
                                     </td>
                                     <td style={{ padding: '16px 24px', color: 'var(--text-muted)', fontSize: '13px' }}>
                                         {new Date(lead.createdAt).toLocaleDateString()}
