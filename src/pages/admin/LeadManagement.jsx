@@ -13,7 +13,8 @@ import {
     Mail,
     Phone,
     BadgeAlert,
-    UserPlus
+    UserPlus,
+    Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../../components/Modal';
@@ -21,10 +22,14 @@ import LeadForm from '../../components/LeadForm';
 import ImportLeadsModal from '../../components/ImportLeadsModal';
 import LeadActionModal from '../../components/LeadActionModal';
 import AssignLeadModal from '../../components/AssignLeadModal';
+import ConfirmModal from '../../components/ConfirmModal';
+import { useAuth } from '../../context/AuthContext';
 
 const LeadManagement = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'Admin';
     const lmsType = searchParams.get('lmsType') || 'School LMS'; // Default fallback
     
     const [leads, setLeads] = useState([]);
@@ -35,6 +40,8 @@ const LeadManagement = () => {
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [selectedLeadIds, setSelectedLeadIds] = useState([]);
     const [formLoading, setFormLoading] = useState(false);
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [leadToDelete, setLeadToDelete] = useState(null);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState({
@@ -136,6 +143,19 @@ const LeadManagement = () => {
             link.remove();
         } catch (error) {
             console.error("Export failed", error);
+        }
+    };
+
+    const handleDeleteLead = async () => {
+        if (!leadToDelete || !resolvedProject) return;
+        try {
+            await API.delete(`/projects/${resolvedProject._id}/leads/${leadToDelete._id}`);
+            setIsConfirmDeleteOpen(false);
+            setLeadToDelete(null);
+            fetchLeads();
+        } catch (error) {
+            console.error("Failed to delete lead", error);
+            alert(error.response?.data?.message || "Failed to delete lead");
         }
     };
 
@@ -254,6 +274,15 @@ const LeadManagement = () => {
                 />
             </Modal>
 
+            <ConfirmModal
+                isOpen={isConfirmDeleteOpen}
+                onClose={() => setIsConfirmDeleteOpen(false)}
+                onConfirm={handleDeleteLead}
+                title="Delete Lead"
+                message={`Are you sure you want to delete lead "${leadToDelete?.name}"?`}
+                confirmText="Delete"
+            />
+
 
 
             <div className="glass-card" style={{ padding: '20px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
@@ -366,7 +395,7 @@ const LeadManagement = () => {
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span 
-                                                onClick={() => navigate(`/admin/projects/${resolvedProject._id}/leads/${lead._id}`)}
+                                                onClick={() => navigate(`/admin/projects/${resolvedProject._id}/leads/${lead._id}?lmsType=${encodeURIComponent(lmsType)}`)}
                                                 style={{ 
                                                     fontWeight: '600', 
                                                     marginBottom: '4px', 
@@ -439,7 +468,24 @@ const LeadManagement = () => {
                                             >
                                                 Update
                                             </button>
-
+                                            {isAdmin && (
+                                                <button
+                                                    className="btn"
+                                                    style={{ 
+                                                        padding: '6px', 
+                                                        background: 'rgba(239, 68, 68, 0.1)', 
+                                                        color: '#ef4444', 
+                                                        border: '1px solid rgba(239, 68, 68, 0.1)' 
+                                                    }}
+                                                    onClick={() => {
+                                                        setLeadToDelete(lead);
+                                                        setIsConfirmDeleteOpen(true);
+                                                    }}
+                                                    title="Delete Lead"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </motion.tr>

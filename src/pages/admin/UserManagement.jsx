@@ -15,6 +15,7 @@ import {
 import { motion } from 'framer-motion';
 import Modal from '../../components/Modal';
 import UserForm from '../../components/UserForm';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const UserManagement = () => {
     const navigate = useNavigate();
@@ -34,6 +35,8 @@ const UserManagement = () => {
     const [membershipError, setMembershipError] = useState('');
     const [membershipSuccess, setMembershipSuccess] = useState('');
     const [editingMembership, setEditingMembership] = useState(null); // { memberId, projectId, currentRole }
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [membershipToRemove, setMembershipToRemove] = useState(null); // { memberId, projectId }
 
     const fetchUserMemberships = async (userId) => {
         setMembershipLoading(true);
@@ -85,13 +88,22 @@ const UserManagement = () => {
         }
     };
 
-    const handleRemoveMembership = async (memberId, projectId) => {
-        if (!window.confirm('Remove this user from the project?')) return;
+    const handleRemoveMembership = (memberId, projectId) => {
+        setMembershipToRemove({ memberId, projectId });
+        setIsConfirmOpen(true);
+    };
+
+    const confirmRemoveMembership = async () => {
+        if (!membershipToRemove) return;
+        const { memberId, projectId } = membershipToRemove;
+        
         setMembershipError('');
         setMembershipSuccess('');
         try {
             await API.delete(`/projects/${projectId}/members/${memberId}`);
             setMembershipSuccess('Removed from project.');
+            setIsConfirmOpen(false);
+            setMembershipToRemove(null);
             fetchUsers(false);
             await loadMembershipsForUser(selectedUser._id);
         } catch (error) {
@@ -416,6 +428,15 @@ const UserManagement = () => {
                     </div>
                 </div>
             </Modal>
+
+            <ConfirmModal
+                isOpen={isConfirmOpen}
+                onClose={() => setIsConfirmOpen(false)}
+                onConfirm={confirmRemoveMembership}
+                title="Remove Assignment"
+                message="Are you sure you want to remove this user from this project?"
+                confirmText="Remove"
+            />
 
 
 

@@ -6,11 +6,13 @@ import {
     Mail,
     Phone,
     ArrowLeft,
-    Target
+    Target,
+    Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../../components/Modal';
 import LeadActionModal from '../../components/LeadActionModal';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const LmsBdaLeads = () => {
     const { lmsType, bdaId } = useParams();
@@ -19,6 +21,8 @@ const LmsBdaLeads = () => {
     const [bdaInfo, setBdaInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [updatingLead, setUpdatingLead] = useState(null);
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [leadToDelete, setLeadToDelete] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -45,6 +49,28 @@ const LmsBdaLeads = () => {
         };
         fetchData();
     }, [lmsType, bdaId]);
+
+    const handleDeleteLead = async () => {
+        if (!leadToDelete) return;
+        try {
+            // Need project ID. We can get it from the lead object.
+            const projectId = leadToDelete.projectId?._id || leadToDelete.projectId;
+            await API.delete(`/projects/${projectId}/leads/${leadToDelete._id}`);
+            setIsConfirmDeleteOpen(false);
+            setLeadToDelete(null);
+            
+            // Refresh data
+            const { data: leadsData } = await API.get(`/users/${bdaId}/leads?limit=200`);
+            const allLeads = leadsData.data || [];
+            const filtered = allLeads.filter(
+                lead => lead.projectId?.name === decodeURIComponent(lmsType)
+            );
+            setLeads(filtered);
+        } catch (error) {
+            console.error("Failed to delete lead", error);
+            alert(error.response?.data?.message || "Failed to delete lead");
+        }
+    };
 
     const getStatusColor = (status) => {
         const s = status?.toLowerCase();
@@ -130,7 +156,19 @@ const LmsBdaLeads = () => {
                                 >
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontWeight: '600', marginBottom: '4px' }}>{lead.name}</span>
+                                            <span 
+                                                onClick={() => navigate(`/admin/projects/${lead.projectId?._id || lead.projectId}/leads/${lead._id}?lmsType=${encodeURIComponent(lmsType)}`)}
+                                                style={{ 
+                                                    fontWeight: '600', 
+                                                    marginBottom: '4px', 
+                                                    cursor: 'pointer',
+                                                    color: 'var(--primary)'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                                onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                            >
+                                                {lead.name}
+                                            </span>
                                             <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} />{lead.phone}</span>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} />{lead.email}</span>
@@ -166,13 +204,31 @@ const LmsBdaLeads = () => {
                                         {new Date(lead.createdAt).toLocaleDateString()}
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <button
-                                            className="btn btn-secondary"
-                                            style={{ padding: '6px 12px', fontSize: '12px' }}
-                                            onClick={() => setUpdatingLead(lead)}
-                                        >
-                                            Transfer
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                className="btn btn-secondary"
+                                                style={{ padding: '6px 12px', fontSize: '12px' }}
+                                                onClick={() => setUpdatingLead(lead)}
+                                            >
+                                                Transfer
+                                            </button>
+                                            <button
+                                                className="btn"
+                                                style={{ 
+                                                    padding: '6px', 
+                                                    background: 'rgba(239, 68, 68, 0.1)', 
+                                                    color: '#ef4444', 
+                                                    border: '1px solid rgba(239, 68, 68, 0.1)' 
+                                                }}
+                                                onClick={() => {
+                                                    setLeadToDelete(lead);
+                                                    setIsConfirmDeleteOpen(true);
+                                                }}
+                                                title="Delete Lead"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </motion.tr>
                             ))}
@@ -197,6 +253,15 @@ const LmsBdaLeads = () => {
                     />
                 )}
             </Modal>
+
+            <ConfirmModal
+                isOpen={isConfirmDeleteOpen}
+                onClose={() => setIsConfirmDeleteOpen(false)}
+                onConfirm={handleDeleteLead}
+                title="Delete Lead"
+                message={`Are you sure you want to delete lead "${leadToDelete?.name}"?`}
+                confirmText="Delete"
+            />
         </div>
     );
 };

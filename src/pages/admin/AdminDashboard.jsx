@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../api/axios';
-import { GraduationCap, Building2, University, Cloud, X, LayoutDashboard, Target, Users, ChevronRight, LogOut, Sun, Moon, Bell, Plus, Folder } from 'lucide-react';
+import { GraduationCap, Building2, University, Cloud, X, LayoutDashboard, Target, Users, ChevronRight, LogOut, Sun, Moon, Bell, Plus, Folder, Edit2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Modal from '../../components/Modal';
 import LeadForm from '../../components/LeadForm';
+import ConfirmModal from '../../components/ConfirmModal';
 
 
 
@@ -32,6 +33,9 @@ const AdminDashboard = () => {
     const [newProject, setNewProject] = useState({ name: '', description: '' });
     const [addingLeadToProject, setAddingLeadToProject] = useState(null);
     const [leadCreateLoading, setLeadCreateLoading] = useState(false);
+    const [editingProject, setEditingProject] = useState(null);
+    const [projectToDelete, setProjectToDelete] = useState(null);
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -70,6 +74,40 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error("Failed to create project", error);
             alert(error.response?.data?.message || "Failed to create project");
+        } finally {
+            setCreateLoading(false);
+        }
+    };
+
+    const handleUpdateProject = async (e) => {
+        e.preventDefault();
+        setCreateLoading(true);
+        try {
+            await API.patch(`/projects/${editingProject._id}`, {
+                name: editingProject.name,
+                description: editingProject.description
+            });
+            setEditingProject(null);
+            fetchData();
+        } catch (error) {
+            console.error("Failed to update project", error);
+            alert(error.response?.data?.message || "Failed to update project");
+        } finally {
+            setCreateLoading(false);
+        }
+    };
+
+    const handleDeleteProject = async () => {
+        if (!projectToDelete) return;
+        setCreateLoading(true);
+        try {
+            await API.delete(`/projects/${projectToDelete._id}`);
+            setIsConfirmDeleteOpen(false);
+            setProjectToDelete(null);
+            fetchData();
+        } catch (error) {
+            console.error("Failed to delete project", error);
+            alert(error.response?.data?.message || "Failed to delete project");
         } finally {
             setCreateLoading(false);
         }
@@ -245,17 +283,23 @@ const AdminDashboard = () => {
                 </motion.div>
 
                 <Modal
-                    isOpen={isCreateModalOpen}
-                    onClose={() => setIsCreateModalOpen(false)}
-                    title="Create New Project"
+                    isOpen={isCreateModalOpen || !!editingProject}
+                    onClose={() => {
+                        setIsCreateModalOpen(false);
+                        setEditingProject(null);
+                    }}
+                    title={editingProject ? "Edit Project" : "Create New Project"}
                 >
-                    <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <form onSubmit={editingProject ? handleUpdateProject : handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Project Name</label>
                             <input 
                                 className="input-field"
-                                value={newProject.name}
-                                onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                                value={editingProject ? editingProject.name : newProject.name}
+                                onChange={(e) => editingProject 
+                                    ? setEditingProject({ ...editingProject, name: e.target.value })
+                                    : setNewProject({ ...newProject, name: e.target.value })
+                                }
                                 placeholder="e.g. Health LMS"
                                 required
                             />
@@ -265,17 +309,29 @@ const AdminDashboard = () => {
                             <textarea 
                                 className="input-field"
                                 style={{ minHeight: '100px', resize: 'vertical' }}
-                                value={newProject.description}
-                                onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                                value={editingProject ? editingProject.description : newProject.description}
+                                onChange={(e) => editingProject
+                                    ? setEditingProject({ ...editingProject, description: e.target.value })
+                                    : setNewProject({ ...newProject, description: e.target.value })
+                                }
                                 placeholder="Describe the purpose of this project..."
                                 required
                             />
                         </div>
                         <button className="btn btn-primary" type="submit" disabled={createLoading} style={{ justifyContent: 'center' }}>
-                            {createLoading ? 'Creating...' : 'Create Project'}
+                            {createLoading ? 'Processing...' : (editingProject ? 'Update Project' : 'Create Project')}
                         </button>
                     </form>
                 </Modal>
+
+                <ConfirmModal
+                    isOpen={isConfirmDeleteOpen}
+                    onClose={() => setIsConfirmDeleteOpen(false)}
+                    onConfirm={handleDeleteProject}
+                    title="Delete Project"
+                    message={`Are you sure you want to delete "${projectToDelete?.name}"? This will remove all associated data.`}
+                    confirmText="Delete Project"
+                />
 
                 <Modal
                     isOpen={!!addingLeadToProject}
@@ -341,6 +397,52 @@ const AdminDashboard = () => {
                                     background: `linear-gradient(90deg, transparent, rgb(${card.color}), transparent)`,
                                     opacity: 0.6
                                 }} />
+
+                                {/* Project Actions */}
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '12px',
+                                    right: '12px',
+                                    display: 'flex',
+                                    gap: '8px',
+                                    zIndex: 10
+                                }}>
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingProject(p);
+                                        }}
+                                        style={{ 
+                                            background: 'rgba(255,255,255,0.05)', 
+                                            border: '1px solid rgba(255,255,255,0.1)', 
+                                            borderRadius: '10px', 
+                                            padding: '6px',
+                                            color: 'var(--text-muted)',
+                                            cursor: 'pointer'
+                                        }}
+                                        title="Edit Project"
+                                    >
+                                        <Edit2 size={14} />
+                                    </button>
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setProjectToDelete(p);
+                                            setIsConfirmDeleteOpen(true);
+                                        }}
+                                        style={{ 
+                                            background: 'rgba(255,255,255,0.05)', 
+                                            border: '1px solid rgba(255,255,255,0.1)', 
+                                            borderRadius: '10px', 
+                                            padding: '6px',
+                                            color: 'var(--accent)',
+                                            cursor: 'pointer'
+                                        }}
+                                        title="Delete Project"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
 
                                 {/* Floating Background Glows */}
                                 <div style={{

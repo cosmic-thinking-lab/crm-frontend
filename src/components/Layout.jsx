@@ -46,10 +46,31 @@ const SidebarItem = ({ icon: Icon, label, path, active, collapsed }) => (
 const Layout = ({ children }) => {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
-    const [collapsed, setCollapsed] = React.useState(false);
+    const [collapsed, setCollapsed] = React.useState(window.innerWidth <= 1024);
+    const [mobileOpen, setMobileOpen] = React.useState(false);
+    const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
     const [showNotifications, setShowNotifications] = React.useState(false);
     const location = useLocation();
     const { lmsType: urlLmsType } = useParams();
+
+    React.useEffect(() => {
+        const handleResize = () => {
+            const width = window.innerWidth;
+            setIsMobile(width <= 768);
+            if (width <= 1024) {
+                setCollapsed(true);
+            } else {
+                setCollapsed(false);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Close mobile menu on navigation
+    React.useEffect(() => {
+        setMobileOpen(false);
+    }, [location.pathname]);
 
     // Determine if we are in a product context
     const searchParams = new URLSearchParams(location.search);
@@ -100,26 +121,33 @@ const Layout = ({ children }) => {
 
     const menu = productMenu || (user?.role === 'Admin' ? adminMenu : user?.role === 'Manager' ? managerMenu : bdaMenu);
 
+    const sidebarWidth = collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)';
+
     return (
-        <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', background: 'transparent' }}>
+        <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', background: 'transparent', position: 'relative' }}>
+            {/* Mobile Overlay */}
+            {isMobile && mobileOpen && (
+                <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />
+            )}
+
             {/* Sidebar */}
-            <aside className={`glass-card sidebar ${!collapsed ? 'sidebar-expanded' : ''}`} style={{
-                width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+            <aside className={`glass-card sidebar ${!collapsed ? 'sidebar-expanded' : ''} ${mobileOpen ? 'mobile-open' : ''}`} style={{
+                width: isMobile ? '280px' : sidebarWidth,
                 height: '100%',
                 margin: '0',
                 borderRadius: '0',
                 display: 'flex',
                 flexDirection: 'column',
                 flexShrink: 0,
-                transition: 'width 0.3s ease',
-                zIndex: 100,
-                position: 'fixed',
+                transition: 'var(--transition)',
+                zIndex: 1000,
+                position: isMobile ? 'fixed' : 'fixed',
                 top: 0,
                 left: 0,
                 bottom: 0,
                 overflow: 'hidden'
             }}>
-                <div style={{ padding: collapsed ? '24px 0' : '24px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', gap: '12px' }}>
+                <div style={{ padding: collapsed && !isMobile ? '24px 0' : '24px', display: 'flex', alignItems: 'center', justifyContent: (collapsed && !isMobile) ? 'center' : 'space-between', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{
                             minWidth: '32px',
@@ -132,7 +160,7 @@ const Layout = ({ children }) => {
                         }}>
                             <Target size={20} color="white" />
                         </div>
-                        {!collapsed && (
+                        {(!collapsed || isMobile) && (
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                 <span style={{ fontWeight: '800', fontSize: '18px', letterSpacing: '-0.5px', color: 'white' }}>COSMIC CRM</span>
                                 {currentLmsType && (
@@ -150,16 +178,16 @@ const Layout = ({ children }) => {
                             </div>
                         )}
                     </div>
-                    {!collapsed && (
+                    {(!collapsed || isMobile) && (
                         <button
-                            onClick={() => setCollapsed(!collapsed)}
+                            onClick={() => isMobile ? setMobileOpen(false) : setCollapsed(!collapsed)}
                             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                         >
                             <Menu size={20} />
                         </button>
                     )}
                 </div>
-                {collapsed && (
+                {collapsed && !isMobile && (
                     <button
                         onClick={() => setCollapsed(!collapsed)}
                         style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', marginBottom: '12px', display: 'flex', justifyContent: 'center' }}
@@ -171,7 +199,8 @@ const Layout = ({ children }) => {
                 <nav style={{ flex: 1, marginTop: '12px' }}>
                     {menu.map((item) => {
                         const [pathPart] = item.path.split('?');
-                        const isItemActive = location.pathname === pathPart && 
+                        const isItemActive = (location.pathname === pathPart || 
+                            (item.label === 'All Leads' && location.pathname.includes('/leads/'))) && 
                             (item.path.includes('?') ? location.search.includes(item.path.split('?')[1]) : true);
                         
                         return (
@@ -179,21 +208,21 @@ const Layout = ({ children }) => {
                                 key={item.path}
                                 {...item}
                                 active={isItemActive}
-                                collapsed={collapsed}
+                                collapsed={collapsed && !isMobile}
                             />
                         );
                     })}
                 </nav>
 
-                <div style={{ padding: collapsed ? '16px 0' : '16px', borderTop: '1px solid var(--glass-border)' }}>
+                <div style={{ padding: (collapsed && !isMobile) ? '16px 0' : '16px', borderTop: '1px solid var(--glass-border)' }}>
                     <button
                         onClick={logout}
                         className="sidebar-item"
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: collapsed ? 'center' : 'flex-start',
-                            width: collapsed ? '40px' : 'calc(100% - 24px)',
+                            justifyContent: (collapsed && !isMobile) ? 'center' : 'flex-start',
+                            width: (collapsed && !isMobile) ? '40px' : 'calc(100% - 24px)',
                             margin: '0 auto',
                             padding: '12px',
                             borderRadius: '12px',
@@ -201,12 +230,12 @@ const Layout = ({ children }) => {
                             background: 'transparent',
                             border: 'none',
                             cursor: 'pointer',
-                            gap: collapsed ? '0' : '12px',
+                            gap: (collapsed && !isMobile) ? '0' : '12px',
                             transition: 'var(--transition)'
                         }}
                     >
                         <LogOut size={20} />
-                        {!collapsed && <span style={{ fontWeight: '500', fontSize: '14px' }}>Sign Out</span>}
+                        {(!collapsed || isMobile) && <span style={{ fontWeight: '500', fontSize: '14px' }}>Sign Out</span>}
                     </button>
                 </div>
             </aside>
@@ -214,9 +243,9 @@ const Layout = ({ children }) => {
             {/* Main Content */}
             <main className="main-content" style={{
                 flex: 1,
-                marginLeft: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+                marginLeft: isMobile ? 0 : sidebarWidth,
                 transition: 'margin-left 0.3s ease',
-                padding: '16px 32px 32px',
+                padding: isMobile ? '16px' : '16px 32px 32px',
                 width: '100%',
                 minWidth: 0,
                 height: '100%',
@@ -228,10 +257,35 @@ const Layout = ({ children }) => {
                     height: 'var(--nav-height)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'flex-end',
+                    justifyContent: 'space-between',
                     marginBottom: '24px',
                     position: 'relative'
                 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        {isMobile && (
+                            <button
+                                onClick={() => setMobileOpen(true)}
+                                style={{ 
+                                    background: 'var(--glass)', 
+                                    border: '1px solid var(--glass-border)', 
+                                    color: 'var(--text-main)', 
+                                    cursor: 'pointer',
+                                    width: '42px',
+                                    height: '42px',
+                                    borderRadius: '12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <Menu size={20} />
+                            </button>
+                        )}
+                        {!isMobile && (
+                            <div style={{ visibility: 'hidden' }}>spacer</div>
+                        )}
+                    </div>
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <button
                             className="glass-card"
@@ -274,7 +328,7 @@ const Layout = ({ children }) => {
                         <Notifications isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ textAlign: 'right' }}>
+                            <div style={{ textAlign: 'right', display: isMobile ? 'none' : 'block' }}>
                                 <p style={{ fontSize: '14px', fontWeight: '600' }}>{user?.name}</p>
                                 <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{user?.role}</p>
                             </div>
@@ -304,5 +358,6 @@ const Layout = ({ children }) => {
         </div>
     );
 };
+
 
 export default Layout;

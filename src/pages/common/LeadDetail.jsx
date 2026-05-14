@@ -13,9 +13,11 @@ import {
     History,
     Send,
     Check,
-    X
+    X,
+    Trash2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const LeadDetail = ({ role }) => {
     const { id, projectId } = useParams();
@@ -38,6 +40,10 @@ const LeadDetail = ({ role }) => {
         organization: '',
         priority: ''
     });
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [noteToDelete, setNoteToDelete] = useState(null);
+    const [isConfirmDeleteNoteOpen, setIsConfirmDeleteNoteOpen] = useState(false);
 
     const fetchNotes = async () => {
         if (!id || !projectId) return;
@@ -117,6 +123,19 @@ const LeadDetail = ({ role }) => {
             alert(errorMsg);
         }
     };
+    
+    const handleDeleteLead = async () => {
+        setDeleting(true);
+        try {
+            await API.delete(`/projects/${projectId}/leads/${id}`);
+            navigate(-1);
+        } catch (error) {
+            console.error("Failed to delete lead", error);
+            alert(error.response?.data?.message || "Failed to delete lead");
+            setDeleting(false);
+            setIsConfirmDeleteOpen(false);
+        }
+    };
 
 
 
@@ -144,6 +163,19 @@ const LeadDetail = ({ role }) => {
         } catch (error) {
             console.error("Failed to update note", error);
             alert(error.response?.data?.message || "Failed to update note");
+        }
+    };
+    
+    const handleDeleteNote = async () => {
+        if (!noteToDelete) return;
+        try {
+            await API.delete(`/projects/${projectId}/leads/${id}/notes/${noteToDelete}`);
+            setIsConfirmDeleteNoteOpen(false);
+            setNoteToDelete(null);
+            fetchNotes();
+        } catch (error) {
+            console.error("Failed to delete note", error);
+            alert(error.response?.data?.message || "Failed to delete note");
         }
     };
 
@@ -297,6 +329,15 @@ const LeadDetail = ({ role }) => {
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
                     {(role === 'Admin' || role === 'Manager' || role === 'BDA') && (
                         <button className="btn btn-secondary" onClick={() => setIsEditing(true)}><Edit2 size={18} /> Edit</button>
+                    )}
+                    {role === 'Admin' && (
+                        <button 
+                            className="btn" 
+                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}
+                            onClick={() => setIsConfirmDeleteOpen(true)}
+                        >
+                            <Trash2 size={18} /> Delete
+                        </button>
                     )}
                 </div>
             </div>
@@ -504,6 +545,18 @@ const LeadDetail = ({ role }) => {
                                                     >
                                                         <Edit2 size={14} />
                                                     </button>
+                                                    <button 
+                                                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', opacity: 0.5, padding: '4px' }}
+                                                        onClick={() => {
+                                                            setNoteToDelete(note._id);
+                                                            setIsConfirmDeleteNoteOpen(true);
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = 0.5}
+                                                        title="Delete Note"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
                                                 </div>
                                             </div>
                                             <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
@@ -544,6 +597,22 @@ const LeadDetail = ({ role }) => {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                isOpen={isConfirmDeleteOpen}
+                onClose={() => setIsConfirmDeleteOpen(false)}
+                onConfirm={handleDeleteLead}
+                title="Delete Lead"
+                message={`Are you sure you want to delete lead "${lead.name}"? This action cannot be undone.`}
+                confirmText="Delete Lead"
+            />
+            <ConfirmModal
+                isOpen={isConfirmDeleteNoteOpen}
+                onClose={() => setIsConfirmDeleteNoteOpen(false)}
+                onConfirm={handleDeleteNote}
+                title="Delete Note"
+                message="Are you sure you want to delete this note? This action cannot be undone."
+                confirmText="Delete Note"
+            />
         </div>
     );
 };

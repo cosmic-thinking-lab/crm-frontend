@@ -146,7 +146,19 @@ const BDALeads = () => {
                                 >
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontWeight: '600', marginBottom: '4px' }}>{lead.name}</span>
+                                            <span 
+                                                onClick={() => navigate(`/admin/projects/${lead.projectId?._id || lead.projectId}/leads/${lead._id}?lmsType=${encodeURIComponent(lead.projectId?.name || '')}`)}
+                                                style={{ 
+                                                    fontWeight: '600', 
+                                                    marginBottom: '4px', 
+                                                    cursor: 'pointer',
+                                                    color: 'var(--primary)'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                                onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                            >
+                                                {lead.name}
+                                            </span>
                                             <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} />{lead.phone}</span>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} />{lead.email}</span>

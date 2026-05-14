@@ -6,10 +6,12 @@ import {
     MessageSquare,
     Calendar as CalendarIcon,
     TrendingUp,
-    UserPlus
+    UserPlus,
+    Trash2
 } from 'lucide-react';
 import API from '../api/axios';
 import { motion } from 'framer-motion';
+import ConfirmModal from './ConfirmModal';
 
 const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId }) => {
     const [status, setStatus] = useState(lead.status?.toLowerCase() || 'new');
@@ -21,6 +23,8 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -104,6 +108,24 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to update lead');
             setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        setDeleting(true);
+        setError('');
+        try {
+            const resolvedProjectId = projectId || lead.projectId?._id || lead.projectId || lead.project?._id;
+            await API.delete(`/projects/${resolvedProjectId}/leads/${lead._id}`);
+            setSuccess('Lead deleted successfully!');
+            setTimeout(() => {
+                onComplete();
+                onClose();
+            }, 1000);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to delete lead');
+            setDeleting(false);
+            setIsConfirmDeleteOpen(false);
         }
     };
 
@@ -224,12 +246,45 @@ const LeadActionModal = ({ lead, onClose, onComplete, isAdmin = false, projectId
                 <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={submitting}
+                    disabled={submitting || deleting}
                     style={{ flex: 1, justifyContent: 'center' }}
                 >
                     {submitting ? <Loader2 className="animate-spin" size={18} /> : 'Save Changes'}
                 </button>
             </div>
+
+            {isAdmin && (
+                <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                    <button
+                        type="button"
+                        onClick={() => setIsConfirmDeleteOpen(true)}
+                        className="btn"
+                        disabled={submitting || deleting}
+                        style={{ 
+                            width: '100%', 
+                            justifyContent: 'center', 
+                            background: 'rgba(239, 68, 68, 0.1)', 
+                            color: '#ef4444',
+                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                        }}
+                    >
+                        {deleting ? <Loader2 className="animate-spin" size={18} /> : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Trash2 size={16} /> Delete Lead
+                            </div>
+                        )}
+                    </button>
+                </div>
+            )}
+
+            <ConfirmModal
+                isOpen={isConfirmDeleteOpen}
+                onClose={() => setIsConfirmDeleteOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Lead"
+                message={`Are you sure you want to delete lead "${lead.name}"?`}
+                confirmText="Delete"
+            />
         </form>
     );
 };

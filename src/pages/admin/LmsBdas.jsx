@@ -11,11 +11,13 @@ import {
     Mail,
     ArrowLeft,
     Users,
-    Edit2
+    Edit2,
+    Trash2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Modal from '../../components/Modal';
 import UserForm from '../../components/UserForm';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const LmsBdas = () => {
     const { lmsType } = useParams();
@@ -27,6 +29,8 @@ const LmsBdas = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
     const [selectedMember, setSelectedMember] = useState(null);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [memberToRemove, setMemberToRemove] = useState(null);
 
     const fetchProjectAndMembers = async (showLoading = true) => {
         if (showLoading) setLoading(true);
@@ -110,6 +114,27 @@ const LmsBdas = () => {
         }
     };
 
+    const handleRemoveMember = (e, memberId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setMemberToRemove(memberId);
+        setIsConfirmOpen(true);
+    };
+
+    const confirmRemove = async () => {
+        if (!memberToRemove || !project) return;
+        
+        try {
+            await API.delete(`/projects/${project._id}/members/${memberToRemove}`);
+            setIsConfirmOpen(false);
+            setMemberToRemove(null);
+            fetchProjectAndMembers(false);
+        } catch (error) {
+            console.error("Failed to remove member", error);
+            alert(error?.response?.data?.message || "Failed to remove member");
+        }
+    };
+
     const openEditModal = (e, member) => {
         e.preventDefault();
         e.stopPropagation();
@@ -167,6 +192,15 @@ const LmsBdas = () => {
                 />
             </Modal>
 
+            <ConfirmModal
+                isOpen={isConfirmOpen}
+                onClose={() => setIsConfirmOpen(false)}
+                onConfirm={confirmRemove}
+                title="Remove Member"
+                message="Are you sure you want to remove this user from this project?"
+                confirmText="Remove Member"
+            />
+
             <div className="glass-card" style={{ padding: '20px', display: 'flex', gap: '16px' }}>
                 <div style={{ flex: 1, position: 'relative' }}>
                     <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -216,16 +250,19 @@ const LmsBdas = () => {
 
                                 <button
                                     type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setSelectedMember(m);
-                                        setIsModalOpen(true);
-                                    }}
+                                    onClick={(e) => openEditModal(e, m)}
                                     title="Edit User"
                                     style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '4px' }}
                                 >
                                     <Edit2 size={18} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={(e) => handleRemoveMember(e, m._id)}
+                                    title="Remove from Project"
+                                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '4px' }}
+                                >
+                                    <Trash2 size={18} />
                                 </button>
                             </div>
                         </div>
