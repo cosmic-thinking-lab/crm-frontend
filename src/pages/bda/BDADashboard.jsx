@@ -56,7 +56,7 @@ const BDADashboard = () => {
         fetchStats();
     }, []);
 
-    if (loading) return <div style={{ color: 'white' }}>Loading Dashboard...</div>;
+    if (loading) return <div style={{ color: 'var(--text-main)' }}>Loading Dashboard...</div>;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -77,7 +77,7 @@ const BDADashboard = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="glass-card"
-                    style={{ padding: '32px', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(99, 102, 241, 0.1))' }}
+                    style={{ padding: '32px', background: 'var(--glass)' }}
                 >
                     <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Ready to convert?</h2>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: '1.6' }}>
@@ -99,7 +99,7 @@ const BDADashboard = () => {
                         {stats?.statusCounts?.map((status, index) => (
                             <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <div style={{ width: '100px', fontSize: '13px', color: 'var(--text-muted)' }}>{status._id}</div>
-                                <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{ flex: 1, height: '8px', background: 'var(--bg-darker)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${(status.count / stats.totalLeads) * 100}%` }}

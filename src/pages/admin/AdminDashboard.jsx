@@ -208,12 +208,12 @@ const AdminDashboard = () => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '24px',
-                                    background: `linear-gradient(135deg, rgba(${s.color}, 0.1) 0%, rgba(${s.color}, 0.02) 100%)`,
-                                    border: `1px solid rgba(${s.color}, 0.2)`,
+                                    background: `linear-gradient(135deg, rgba(${s.color}, 0.15) 0%, rgba(${s.color}, 0.05) 100%)`,
+                                    border: `1px solid rgba(${s.color}, 0.3)`,
                                     borderRadius: '24px',
                                     position: 'relative',
                                     overflow: 'hidden',
-                                    boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                                    boxShadow: 'var(--card-shadow)'
                                 }}
                             >
                                 <div style={{
@@ -244,8 +244,8 @@ const AdminDashboard = () => {
                                 </div>
                                 
                                 <div style={{ zIndex: 1 }}>
-                                    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', fontWeight: '700', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.title}</p>
-                                    <h2 style={{ fontSize: '32px', fontWeight: '800', letterSpacing: '-0.03em', color: 'white' }}>{s.value || 0}</h2>
+                                    <p style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{s.title}</p>
+                                    <h2 style={{ fontSize: '32px', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--text-main)' }}>{s.value || 0}</h2>
                                 </div>
                             </motion.div>
                         ))}
@@ -378,12 +378,12 @@ const AdminDashboard = () => {
                                     alignItems: 'center',
                                     textAlign: 'center',
                                     gap: '12px',
-                                    background: `linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)`,
-                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    background: 'var(--glass)',
+                                    border: '1px solid var(--glass-border)',
                                     position: 'relative',
                                     overflow: 'hidden',
                                     minHeight: '200px',
-                                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                                    boxShadow: 'var(--card-shadow)',
                                     borderRadius: '28px'
                                 }}
                             >
@@ -489,7 +489,7 @@ const AdminDashboard = () => {
                                     <h3 style={{
                                         fontSize: '18px',
                                         fontWeight: '800',
-                                        color: 'white',
+                                        color: 'var(--text-main)',
                                         letterSpacing: '-0.03em',
                                         lineHeight: 1.2
                                     }}>
@@ -497,7 +497,7 @@ const AdminDashboard = () => {
                                     </h3>
                                     <p style={{
                                         fontSize: '13px',
-                                        color: 'rgba(255,255,255,0.4)',
+                                        color: 'var(--text-muted)',
                                         lineHeight: '1.4',
                                         maxWidth: '200px',
                                         margin: '0 auto'

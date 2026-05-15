@@ -97,8 +97,8 @@ const ManagerTeam = () => {
                         style={{ 
                             padding: '32px 24px 24px', 
                             cursor: 'pointer',
-                            background: 'linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)',
-                            border: '1px solid rgba(255,255,255,0.08)',
+                            background: 'var(--glass)',
+                            border: '1px solid var(--glass-border)',
                             borderRadius: '28px',
                             position: 'relative',
                             overflow: 'hidden'
@@ -145,7 +145,7 @@ const ManagerTeam = () => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'white', marginBottom: '6px', letterSpacing: '-0.02em' }}>{member.userId.name}</h3>
+                                <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '6px', letterSpacing: '-0.02em' }}>{member.userId.name}</h3>
                                 <div style={{ 
                                     padding: '4px 12px',
                                     borderRadius: '10px',
@@ -163,12 +163,12 @@ const ManagerTeam = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '28px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '28px', background: 'var(--bg-darker)', padding: '16px', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-main)', opacity: 0.7 }}>
                                 <div style={{ color: 'var(--primary)' }}><Mail size={16} /></div>
                                 {member.userId.email}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-main)', opacity: 0.7 }}>
                                 <div style={{ color: 'var(--primary)' }}><Phone size={16} /></div>
                                 {member.userId.phone || 'Contact not listed'}
                             </div>
@@ -185,7 +185,7 @@ const ManagerTeam = () => {
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 10px #a78bfa' }} />
-                                <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>Active Member</span>
+                                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Active Member</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(99, 102, 241, 0.1)', padding: '6px 12px', borderRadius: '12px' }}>
                                 View Performance

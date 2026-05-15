@@ -181,17 +181,17 @@ const LeadDetail = ({ role }) => {
 
 
 
-    if (loading) return <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>Loading lead details...</div>;
+    if (loading) return <div style={{ color: 'var(--text-main)', padding: '40px', textAlign: 'center' }}>Loading lead details...</div>;
     
     if (error) return (
-        <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>
+        <div style={{ color: 'var(--text-main)', padding: '40px', textAlign: 'center' }}>
             <h2 style={{ color: 'var(--accent)', marginBottom: '10px' }}>Error</h2>
             <p>{error}</p>
             <button className="btn btn-secondary" style={{ marginTop: '20px' }} onClick={() => navigate(-1)}>Go Back</button>
         </div>
     );
 
-    if (!lead) return <div style={{ color: 'white', padding: '40px', textAlign: 'center' }}>Lead not found.</div>;
+    if (!lead) return <div style={{ color: 'var(--text-main)', padding: '40px', textAlign: 'center' }}>Lead not found.</div>;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
@@ -477,8 +477,8 @@ const LeadDetail = ({ role }) => {
                                 <div key={note._id || idx} style={{ 
                                     padding: '16px', 
                                     borderRadius: '16px', 
-                                    background: 'rgba(255,255,255,0.03)', 
-                                    border: '1px solid rgba(255,255,255,0.06)', 
+                                    background: 'var(--glass)', 
+                                    border: '1px solid var(--glass-border)', 
                                     position: 'relative',
                                     transition: 'var(--transition)'
                                 }}>
@@ -528,7 +528,7 @@ const LeadDetail = ({ role }) => {
                                                         {note.addedBy?.name?.charAt(0) || 'U'}
                                                     </div>
                                                     <div>
-                                                        <p style={{ fontSize: '13px', fontWeight: '700', color: 'white' }}>{note.addedBy?.name || 'User'}</p>
+                                                        <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }}>{note.addedBy?.name || 'User'}</p>
                                                         <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(note.addedAt || note.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
                                                     </div>
                                                 </div>
@@ -559,7 +559,7 @@ const LeadDetail = ({ role }) => {
                                                     </button>
                                                 </div>
                                             </div>
-                                            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                                            <p style={{ fontSize: '14px', color: 'var(--text-main)', opacity: 0.85, lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
                                                 {note.content}
                                             </p>
                                         </>

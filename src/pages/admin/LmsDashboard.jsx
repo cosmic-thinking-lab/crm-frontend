@@ -79,7 +79,7 @@ const LmsDashboard = () => {
         fetchStats();
     }, [lmsType]);
 
-    if (loading) return <div style={{ color: 'white', padding: '40px' }}>Loading {lmsType} Dashboard...</div>;
+    if (loading) return <div style={{ color: 'var(--text-main)', padding: '40px' }}>Loading {lmsType} Dashboard...</div>;
 
     const COLORS = ['#8b5cf6', '#a78bfa', '#c084fc', '#6366f1', '#7c3aed'];
 
@@ -125,8 +125,8 @@ const LmsDashboard = () => {
                                 <XAxis dataKey="bdaName" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip
-                                    contentStyle={{ background: '#0f172a', border: '1px solid var(--glass-border)', borderRadius: '12px' }}
-                                    itemStyle={{ color: '#fff' }}
+                                    contentStyle={{ background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: '12px' }}
+                                    itemStyle={{ color: 'var(--text-main)' }}
                                 />
                                 <Bar dataKey="totalLeads" fill="var(--primary)" radius={[4, 4, 0, 0]} barSize={40} />
                                 <Bar dataKey="convertedLeads" fill="var(--secondary)" radius={[4, 4, 0, 0]} barSize={40} />
@@ -158,7 +158,7 @@ const LmsDashboard = () => {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    contentStyle={{ background: '#0f172a', border: '1px solid var(--glass-border)', borderRadius: '12px' }}
+                                    contentStyle={{ background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: '12px' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>

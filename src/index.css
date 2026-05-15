@@ -18,26 +18,19 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (max-width: 1200px) {
-  :root {
-    --sidebar-width: 220px;
-  }
-}
-
-@media (max-width: 1024px) {
-  :root {
-    --sidebar-width: var(--sidebar-collapsed-width);
-  }
-}
-
 body.light-mode {
-  --bg-dark: #f8fafc;
-  --bg-darker: #f1f5f9;
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --glass: rgba(0, 0, 0, 0.02);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-hover: rgba(0, 0, 0, 0.04);
+  --bg-dark: #ffffff;
+  --bg-darker: #f8fafc;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-hover: rgba(255, 255, 255, 0.9);
+  --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+}
+
+:root {
+  --card-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -70,11 +63,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Removed root scaling to allow standard media queries to work correctly */
 #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  zoom: 0.9;
 }
 
 .glass-card {
@@ -83,7 +76,7 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--card-shadow);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -319,28 +312,20 @@ h4 {
 }
 
 .sidebar {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease !important;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-@media (max-width: 1024px) {
-  .sidebar-expanded {
-    width: var(--sidebar-collapsed-width) !important;
-  }
-}
-
+/* ── Mobile: full-width drawer ── */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed !important;
     left: 0 !important;
     top: 0 !important;
     bottom: 0 !important;
-    transform: translateX(-100%);
+    width: 280px !important;
     z-index: 1000 !important;
     border-right: 1px solid var(--glass-border);
-  }
-
-  .sidebar.mobile-open {
-    transform: translateX(0);
   }
 
   .main-content {
@@ -357,16 +342,86 @@ h4 {
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
     z-index: 999;
-    display: block;
   }
 }
 
-
-.lead-name-hover:hover span {
-  color: var(--primary);
-  text-decoration: underline;
+/* Profile Dropdown */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 210px;
+  background: var(--bg-dark);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--glass-border);
+  z-index: 2000;
+  animation: dropdownFade 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top right;
 }
 
-.table-row-hover:hover {
-  background: rgba(255, 255, 255, 0.02);
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.profile-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 6px;
+}
+
+.profile-dropdown-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--secondary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.profile-dropdown-info p:first-child {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.profile-dropdown-info p:last-child {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.profile-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #fb7185;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+}
+
+.profile-dropdown-btn:hover {
+  background: rgba(251, 113, 133, 0.12);
 }

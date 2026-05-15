@@ -210,7 +210,7 @@ const AddNotePage = () => {
                                         transition={{ delay: idx * 0.05 }}
                                         style={{ 
                                             padding: '16px', 
-                                            background: 'rgba(255,255,255,0.02)', 
+                                            background: 'var(--glass)', 
                                             borderRadius: '12px', 
                                             border: '1px solid var(--glass-border)',
                                             position: 'relative'

@@ -24,10 +24,10 @@ const StatCard = ({ title, value, icon: Icon, color, delay }) => (
             position: 'relative',
             overflow: 'hidden',
             minWidth: '260px',
-            background: `linear-gradient(135deg, rgba(${color}, 0.08) 0%, rgba(${color}, 0.02) 100%)`,
-            border: `1px solid rgba(${color}, 0.2)`,
+            background: 'var(--glass)',
+            border: `1px solid rgba(${color}, 0.3)`,
             borderRadius: '24px',
-            boxShadow: `0 15px 35px rgba(0,0,0,0.2)`
+            boxShadow: 'var(--card-shadow)'
         }}
     >
         {/* Background Glow */}
@@ -72,12 +72,12 @@ const StatCard = ({ title, value, icon: Icon, color, delay }) => (
                 </div>
             </div>
             
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
                 {title}
             </p>
             
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-                <h2 style={{ fontSize: '36px', fontWeight: '800', color: 'white', letterSpacing: '-1.5px' }}>
+                <h2 style={{ fontSize: '36px', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-1.5px' }}>
                     {value || '0'}
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(139, 92, 246, 0.1)', padding: '4px 8px', borderRadius: '8px', color: '#a78bfa', fontSize: '11px', fontWeight: '700' }}>
@@ -209,7 +209,8 @@ const ManagerOverview = () => {
                                 padding: '12px 20px', 
                                 flex: '1 1 140px', 
                                 textAlign: 'center',
-                                background: 'rgba(255,255,255,0.03)'
+                                background: 'var(--glass)',
+                                border: '1px solid var(--glass-border)'
                             }}>
                                 <p style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{stat._id}</p>
                                 <p style={{ fontSize: '20px', fontWeight: '700' }}>{stat.count}</p>
