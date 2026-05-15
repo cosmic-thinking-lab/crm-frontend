@@ -132,7 +132,7 @@ body {
 
 .input-field {
   width: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 14px 18px;
@@ -143,12 +143,13 @@ body {
 }
 
 .input-field::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--text-muted);
+  opacity: 0.8;
 }
 
 .input-field:focus {
   border-color: var(--primary);
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--glass-hover);
   box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
 }
 
